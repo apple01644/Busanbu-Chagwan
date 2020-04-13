@@ -29,6 +29,7 @@ async def on_ready():
     band_parse_loop.start()
 
 
+@client.event
 async def on_message(msg: discord.Message):
     print(msg)
     if msg.channel.id == 696585229347061843 and (not msg.author.bot):
