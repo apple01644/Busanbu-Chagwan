@@ -4,6 +4,7 @@ from discord.ext import tasks
 import spreadsheet
 from band import band
 
+global channel
 client = discord.Client()
 channel = None
 discord_token = open('discord_bot_token', 'r').read()
@@ -17,7 +18,9 @@ def get_embed_from_band_data(data):
 
 @tasks.loop(seconds=60.0)
 async def band_parse_loop():
+    global channel
     for item in band.get_post():
+        print(item)
         await channel.send(embed=get_embed_from_band_data(item))
         for photo in item['photos']:
             await channel.send(photo['url'])
@@ -25,8 +28,9 @@ async def band_parse_loop():
 
 @client.event
 async def on_ready():
+    global channel
     print('Start Process')
-    channel = client.get_channel(696585229347061843)
+    channel = client.get_channel(698127499468603392)
     band_parse_loop.start()
 
 
