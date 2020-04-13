@@ -5,7 +5,7 @@ import spreadsheet
 from band import band
 
 client = discord.Client()
-channel = client.get_channel(696585229347061843)
+channel = None
 discord_token = open('discord_bot_token', 'r').read()
 
 
@@ -26,6 +26,7 @@ async def band_parse_loop():
 @client.event
 async def on_ready():
     print('Start Process')
+    channel = client.get_channel(696585229347061843)
     band_parse_loop.start()
 
 
