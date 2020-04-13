@@ -17,15 +17,12 @@ class Band:
         self.param_for_get_post = {'access_token': self.key['access_token'],
                                    'band_key': 'AADe-67DagLFl4xgYFYmMm0r',
                                    'locale': 'ko_KR'}
-        self.refresh_time()
-
-    def refresh_time(self):
-        self.last_fresh_time = int(time.time() * 1000)
+        self.get_post()
 
     def get_post(self):
         posts = json.loads(req.get(self.urls['posts'], params=self.param_for_get_post).text)
         result = [item for item in posts['result_data']['items'] if item['created_at'] >= self.last_fresh_time]
-        self.refresh_time()
+        self.last_refresh_time = result[0]['create_at']
         return result
 
 
