@@ -98,7 +98,7 @@ def run_command(content):
         if week is None:
             return '계획이 없는 일자 입니다.'
 
-        data = read_spreadsheet(f'{group[0]}반-{week}주차.txt')[weekday]
+        data = read_spreadsheet(f'data/spreadsheets/{group[0]}반-{week}주차.txt')[weekday]
         text = ''
         # print(data)
         i = -1
