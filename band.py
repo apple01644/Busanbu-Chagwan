@@ -1,6 +1,5 @@
 import json
 import time
-
 import requests as req
 
 
@@ -22,7 +21,7 @@ class Band:
     def get_post(self):
         posts = json.loads(req.get(self.urls['posts'], params=self.param_for_get_post).text)
         result = [item for item in posts['result_data']['items'] if item['created_at'] >= self.last_fresh_time]
-        self.last_refresh_time = result[0]['created_at']
+        self.last_refresh_time = max([item['created_at'] for item in result])
         return result
 
 
