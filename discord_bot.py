@@ -7,6 +7,7 @@ from discord.ext import tasks
 
 client = discord.Client()
 channel = None
+discord_token = open('id.txt', 'r').read()
 
 band = Band()
 
@@ -41,4 +42,4 @@ def getEmbed(data):
     embed.add_field(name="작성자", value=data['author']['name'], inline=True)
     return embed
 
-client.run('Njk3NjQ3MjM3MTAyMzA1MzUx.XpHGaA.mIJwqpNWWAuXp1ktr4z0d7mzpD4')
+client.run(discord_token)
