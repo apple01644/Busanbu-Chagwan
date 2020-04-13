@@ -22,8 +22,8 @@ async def on_ready():
 @client.event
 async def on_message(message):
     global channel
-    channel = message.channel
     if message.content.startswith('!start'):
+        channel = message.channel
         await channel.send('Start!')
 
 @tasks.loop(seconds=3600.0)
