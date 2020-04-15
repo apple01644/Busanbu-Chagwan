@@ -116,3 +116,90 @@ def run_command(content):
             text += '\n'
 
         return "```" + text + "```"
+
+bookmarks = {}
+
+bookmarks[1] = {
+  "진로": {
+    "shorten name": "진로",
+    "link": "https://classroom.google.com/u/1/c/NjgxMTgyNTU3NDNa"
+  },
+  "프로젝트실습": {
+    "shorten name": "프로",
+    "link": "https://classroom.google.com/u/1/c/NjY0NTc1ODQ2NDla"
+  },
+  "모바일웹프로그래밍": {
+    "shorten name": "모프",
+    "link": "https://classroom.google.com/u/1/c/NjY0NDc4MDU2Mzha"
+  },
+  "웹프로그래밍": {
+    "shorten name": "웹실",
+    "link": "https://classroom.google.com/u/1/c/NjgxMDU5NDM4ODla"
+  },
+  "성공적인직업생활": {
+    "shorten name": "성직",
+    "link": "https://classroom.google.com/u/1/c/NjY0NTYyMDU0ODVa"
+  },
+  "알림방": {
+    "shorten name": None,
+    "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxMTha"
+  }
+}
+
+bookmarks[2] = {
+  "진로": {
+    "shorten name": "진로",
+    "link": "https://classroom.google.com/u/1/c/NjgxMTQzNjE4Njla"
+  },
+  "프로젝트실습": {
+    "shorten name": "프로",
+    "link": "https://classroom.google.com/u/1/c/NjY0NTc1ODQ2NjNa"
+  },
+  "모바일웹프로그래밍": {
+    "shorten name": "모프",
+    "link": "https://classroom.google.com/u/1/c/Njc3MzY3NDMzMjJa"
+  },
+  "웹프로그래밍": {
+    "shorten name": "웹실",
+    "link": "https://classroom.google.com/u/1/c/NjgxMDU5NDM5MTBa"
+  },
+  "성공적인직업생활": {
+    "shorten name": "성직",
+    "link": "https://classroom.google.com/u/1/c/NjY0NjI1Njg3NjNa"
+  },
+  "알림방": {
+    "shorten name": None,
+    "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNDRa"
+  }
+}
+
+bookmarks[3] = {
+  "진로": {
+    "shorten name": "진로",
+    "link": "https://classroom.google.com/u/1/c/NjgxMTQzNjE4ODRa"
+  },
+  "프로젝트실습": {
+    "shorten name": "프로",
+    "link": "https://classroom.google.com/u/1/c/NjY0NTMxNDk0NzRa"
+  },
+  "모바일플랫폼": {
+    "shorten name": "모플",
+    "link": "https://classroom.google.com/u/1/c/NjY0NTMxNDk0NjBa"
+  },
+  "임베디드리눅스": {
+    "shorten name": "임리",
+    "link": "https://classroom.google.com/u/1/c/NjY0NDMxMzQ5MDFa"
+  },
+  "임베디드시스템": {
+    "shorten name": "임시",
+    "link": "https://classroom.google.com/u/1/c/Njg1MjI5MDE4MTZa"
+  },
+  "성공적인직업생활": {
+    "shorten name": "성직",
+    "link": "https://classroom.google.com/u/1/c/NjY0NjI1Njg3ODBa"
+  },
+  "알림방": {
+    "shorten name": None,
+    "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNTRa"
+  }
+}
