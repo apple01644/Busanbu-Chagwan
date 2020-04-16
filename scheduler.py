@@ -34,13 +34,14 @@ async def class_loop(channel):
     if last_run_time < datetime.time(hour=8, minute=20) < now:
         last_run_time = now
         title = '%02d월 %02d일 알람방' % (last_run_date.month, last_run_date.day)
+        desc += '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
         for k in range(3):
             desc += f'{k + 1}반 알림방: ' + spreadsheet.bookmarks[f'{k + 1}']['알림방'] + '\n'
 
     for the_class in classes:
         if last_run_time < the_class['begin'] <= now:
             title = f'{the_class["index"]}교시 시작'
-            text = ''
+            text = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n\n'
             last_run_time = now
             for k in range(3):
                 asd = spreadsheet.run_command(f'ㄱ시간표 {k + 1}반')
@@ -52,7 +53,7 @@ async def class_loop(channel):
                 if class_data["objective"]:
                     text += f'> {class_data["objective"]}\n'
                 if class_data["class_data"]["link"]:
-                    text += f'> || {class_data["class_data"]["link"]} ||\n'
+                    text += f'> {class_data["class_data"]["link"]}\n'
                 text += '\n'
             desc = text
             break
