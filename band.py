@@ -20,6 +20,9 @@ class Band:
 
     def get_post(self):
         posts = json.loads(req.get(self.urls['posts'], params=self.param_for_get_post).text)
+        #print(posts)
+        assert posts["result_code"] == 1
+
         result = [item for item in posts['result_data']['items'] if item['created_at'] > self.last_refresh_time]
         self.last_refresh_time = max([item['created_at'] for item in result] + [self.last_refresh_time])
         return result
