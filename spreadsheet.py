@@ -194,7 +194,7 @@ bookmarks['1'] = {
         "link": "https://classroom.google.com/u/1/c/NjY0NTYyMDU0ODVa"
     },
     "알림방": {
-        "shorten name": None,
+        "shorten name": '알림방',
         "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxMTha"
     }
 }
@@ -221,7 +221,7 @@ bookmarks['2'] = {
         "link": "https://classroom.google.com/u/1/c/NjY0NjI1Njg3NjNa"
     },
     "알림방": {
-        "shorten name": None,
+        "shorten name": '알림방',
         "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNDRa"
     }
 }
@@ -252,7 +252,7 @@ bookmarks['3'] = {
         "link": "https://classroom.google.com/u/1/c/NjY0NjI1Njg3ODBa"
     },
     "알림방": {
-        "shorten name": None,
+        "shorten name": '알림방',
         "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNTRa"
     }
 }
