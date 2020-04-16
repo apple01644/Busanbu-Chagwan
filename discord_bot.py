@@ -26,8 +26,8 @@ def command_data_to_description(data):
     text = ''
     for k in range(7):
         class_data = data[f'{k + 1} 교시']
-
-        if datetime.datetime.now().time() < scheduler.classes[k]['end']:
+        class_datetime = datetime.datetime.combine(data['헤더']['date'].date(), scheduler.classes[k]['end'])
+        if datetime.datetime.now() < class_datetime):
             text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
         else:
             text += f'~~ {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) ~~'
