@@ -7,7 +7,7 @@ import spreadsheet
 
 global last_run_date, last_run_time
 last_run_date = datetime.datetime.now().date()
-last_run_time = datetime.time(hour=11, minute=31)
+last_run_time = datetime.datetime.now().time()
 
 classes = [
     {'index': 1, 'begin': datetime.time(hour=8, minute=40), 'end': datetime.time(hour=9, minute=30)},

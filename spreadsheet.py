@@ -71,7 +71,7 @@ def read_spreadsheet(path):
 bookmarks = {}
 
 
-def run_command(content):
+def run_command(content, roles=[]):
     times = ['08:40~09:30', '09:40~10:30', '10:40~11:30', '11:40~12:30', '13:20~14:10', '14:20~15:10', '15:20~16:10', ]
     if content == 'ㄱ도움':
         return {'status': 400, 'body': 'ㄱ시간표 사용 예시\nㄱ시간표 1반 내일\n'}
@@ -79,68 +79,78 @@ def run_command(content):
     try:
         group = re.findall(regex, content, re.MULTILINE)[0]
     except:
-        if content.find('ㄱ시간표') != -1:
-            return {'status': 400, 'body': 'ㄱ시간표 사용 예시\nㄱ시간표 1반 내일\n'}
-            # 'ㄱ시간표 1반 3주차\n'\
+        group = [None, None, None, None]
 
-    if not (group[0] in ['1', '2', '3']):
+    class_number = None
+
+    for role in roles:
+        if role == '3학년 1반':
+            class_number = '1'
+        elif role == '3학년 2반':
+            class_number = '2'
+        elif role == '3학년 3반':
+            class_number = '3'
+
+    if group[0] in ['1', '2', '3']:
+        class_number = group[0]
+
+    if class_number is None:
         return {'status': 400, 'body': '반이 유효하지 않습니다.'}
 
-    else:
-        day = 0
-        if group[2] == '내일':
-            day = 1
-        if group[2] == '모레':
-            day = 2
-        date = datetime.datetime.now().date()
-        date += datetime.timedelta(days=day)
-        week = get_week(date)
-        weekday = date.weekday()
-        if week is None:
-            return {'status': 400, 'body': '계획이 없는 일자 입니다.'}
+    day = 0
+    if group[2] == '내일':
+        day = 1
+    if group[2] == '모레':
+        day = 2
 
-        class_number = group[0]
-        data = read_spreadsheet(f'data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
-        text = ''
+    date = datetime.datetime.now().date()
+    date += datetime.timedelta(days=day)
+    week = get_week(date)
+    weekday = date.weekday()
+    if week is None:
+        return {'status': 400, 'body': '계획이 없는 일자 입니다.'}
 
-        result = {'헤더': {}, 'status': 200}
-        result['헤더']['date'] = date
-        result['헤더']['class_number'] = class_number
+    data = read_spreadsheet(f'data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
+    text = ''
 
-        k = -1
-        for pair in data:
-            k += 1
-            text += times[k] + ' :: '
-            class_name = pair["과목"]
-            class_data = None
-            teachers = []
-            objective = ''
+    result = {'헤더': {}, 'status': 200}
+    result['헤더']['date'] = date
+    result['헤더']['class_number'] = class_number
 
-            if pair["담당교사"]:
-                teachers = pair["담당교사"] \
-                    .replace('\r', '') \
-                    .replace('\n', ',') \
-                    .replace('\t', '') \
-                    .replace('\f', '') \
-                    .replace('\v', '') \
-                    .replace(' ', '') \
-                    .split(',')
+    k = -1
+    for pair in data:
+        k += 1
+        text += times[k] + ' :: '
+        class_name = pair["과목"]
+        class_data = None
+        teachers = []
+        objective = ''
 
-            if pair["학습방법"]:
-                objective = pair['학습방법']
+        if pair["담당교사"]:
+            teachers = pair["담당교사"] \
+                .replace('\r', '') \
+                .replace('\n', ',') \
+                .replace('\t', '') \
+                .replace('\f', '') \
+                .replace('\v', '') \
+                .replace(' ', '') \
+                .split(',')
 
-            for bookmark_key in bookmarks[class_number]:
-                bookmark = bookmarks[class_number][bookmark_key]
-                if class_name == bookmark['shorten name']:
-                    class_name = bookmark_key
-                    class_data = bookmark
-                    break
+        if pair["학습방법"]:
+            objective = pair['학습방법']
 
-            result_key = f'{k + 1} 교시'
-            result[result_key] = {'raw_data': pair, 'class_name': class_name, 'class_data': class_data,
-                                  'time': times[k], 'teachers': teachers, 'objective': objective}
+        for bookmark_key in bookmarks[class_number]:
+            bookmark = bookmarks[class_number][bookmark_key]
+            if class_name == bookmark['shorten name']:
+                class_name = bookmark_key
+                class_data = bookmark
+                break
 
-        return result
+        result_key = f'{k + 1} 교시'
+        result[result_key] = {'raw_data': pair, 'class_name': class_name, 'class_data': class_data,
+                              'time': times[k], 'teachers': teachers, 'objective': objective}
+
+    return result
 
 
 def preprocess_command_data(data):

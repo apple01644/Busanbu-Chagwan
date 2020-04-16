@@ -1,6 +1,7 @@
 import html
 
 import discord
+import datetime
 from discord.ext import tasks
 
 import spreadsheet
@@ -26,8 +27,10 @@ def command_data_to_description(data):
     for k in range(7):
         class_data = data[f'{k + 1} 교시']
 
-        text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
-
+        if datetime.datetime.now().time() < scheduler.classes[k]['end']:
+            text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
+        else:
+            text += f'~~ {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) ~~'
         if class_data['raw_data']['클래스룸']:
             text += f" || {class_data['class_data']['link']} ||"
 
@@ -68,7 +71,7 @@ async def on_message(msg: discord.Message):
     print(msg)
     if msg.channel.id == 696585229347061843 and (not msg.author.bot):
         if msg.content[0] == 'ㄱ':
-            result = spreadsheet.run_command(msg.content)
+            result = spreadsheet.run_command(msg.content, [role.name for role in msg.author.roles])
             if result['status'] == 200:
                 data = command_data_to_description(result)
                 await msg.channel.send(embed=discord.Embed(title=data['title'], description=data['description']))
