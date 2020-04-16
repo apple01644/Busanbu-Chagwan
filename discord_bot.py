@@ -72,14 +72,15 @@ async def on_message(msg: discord.Message):
     print(msg)
     if msg.channel.id == 696585229347061843 and (not msg.author.bot):
         if msg.content[0] == 'ㄱ':
-            result = spreadsheet.run_command(msg.content, [role.name for role in msg.author.roles])
-            if result['status'] == 200:
-                data = command_data_to_description(result)
-                await msg.channel.send(embed=discord.Embed(title=data['title'], description=data['description']))
-            elif result:
-                await msg.channel.send(result['body'])
-            else:
-                print(result)
+            if msg.content.find('시간표') == 1:
+                result = spreadsheet.run_command(msg.content, [role.name for role in msg.author.roles])
+                if result['status'] == 200:
+                    data = command_data_to_description(result)
+                    await msg.channel.send(embed=discord.Embed(title=data['title'], description=data['description']))
+                elif result:
+                    await msg.channel.send(result['body'])
+                else:
+                    print(result)
 
 
 client.run(discord_token)
