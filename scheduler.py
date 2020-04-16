@@ -8,6 +8,7 @@ import spreadsheet
 global last_run_date, last_run_time
 last_run_date = datetime.datetime.now().date()
 last_run_time = datetime.datetime.now().time()
+alarm_channel = None
 
 classes = [
     {'index': 1, 'begin': datetime.time(hour=8, minute=40), 'end': datetime.time(hour=9, minute=30)},
@@ -21,7 +22,7 @@ classes = [
 
 
 @tasks.loop(seconds=1.0)
-async def class_loop(channel):
+async def class_loop():
     global last_run_date, last_run_time
     now = datetime.datetime.now().time()
     title = None
@@ -64,7 +65,7 @@ async def class_loop(channel):
                 break
 
     if title:
-        await channel.send(embed=discord.Embed(title=title, description=desc))
+        await alarm_channel.send(embed=discord.Embed(title=title, description=desc))
 
 
 if __name__ == '__main__':

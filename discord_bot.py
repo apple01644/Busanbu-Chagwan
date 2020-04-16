@@ -63,7 +63,8 @@ async def on_ready():
     print('Start Process')
     channel = client.get_channel(699239553789067285)
     band_parse_loop.start()
-    scheduler.class_loop.start(channel)
+    scheduler.alarm_channel = channel
+    scheduler.class_loop.start()
 
 
 @client.event
