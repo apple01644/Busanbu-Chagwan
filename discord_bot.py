@@ -82,8 +82,8 @@ async def on_message(msg: discord.Message):
         if msg.content[0] == 'ㄱ':
             result = spreadsheet.run_command(msg.content)
             if result['status'] == 200:
-                get_embed_from_command_data(result)
-                await channel.send(embed=result)
+                embed = get_embed_from_command_data(result)
+                await msg.channel.send(embed=embed)
             elif result:
                 await msg.channel.send(result)
             else:
