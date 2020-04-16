@@ -1,8 +1,5 @@
 import datetime
 import io
-import re
-
-regex = r"ㄱ\s*시간표\s*(?P<Class>\d)\s*반\s*((?P<Days>오늘|내일|모레))?"
 
 
 def get_week(date: datetime.date):
@@ -76,11 +73,7 @@ def run_command(content, roles=[]):
     if content == 'ㄱ도움':
         return {'status': 400, 'body': 'ㄱ시간표 사용 예시\nㄱ시간표 1반 내일\n'}
         # 'ㄱ시간표 1반 3주차\n'\
-    try:
-        group = re.findall(regex, content, re.MULTILINE)[0]
-    except:
-        group = [None, None, None, None]
-
+        
     class_number = None
 
     for role in roles:
@@ -91,16 +84,20 @@ def run_command(content, roles=[]):
         elif role == '3학년 3반':
             class_number = '3'
 
-    if group[0] in ['1', '2', '3']:
-        class_number = group[0]
+    if contnet.find('1반') != -1:
+        class_number = '1'
+    if contnet.find('2반') != -1:
+        class_number = '2'
+    if contnet.find('3반') != -1:
+        class_number = '3'
 
     if class_number is None:
         return {'status': 400, 'body': '반이 유효하지 않습니다.'}
 
     day = 0
-    if group[2] == '내일':
+    if contnet.find('내일') != -1:
         day = 1
-    if group[2] == '모레':
+    if contnet.find('모레') != -1:
         day = 2
 
     date = datetime.datetime.now().date()
