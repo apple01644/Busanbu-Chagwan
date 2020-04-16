@@ -143,6 +143,28 @@ def run_command(content):
         return result
 
 
+def preprocess_command_data(data):
+    teachers_fullname = ['권오석', '이석우', '조수연', '변강순', '우효림', '장창수', '박종대', '김완태', '김경호', '박정열', '배명호', '김한기', '김소영',
+                         '박성', '하태효']
+
+    for k in range(7):
+        class_data = data[f'{k + 1} 교시']
+        teacher_list = ''
+        for i, teacher in enumerate(class_data['teachers']):
+            if i > 0:
+                teacher_list += ', '
+
+            name = teacher
+            for fullname in teachers_fullname:
+                if fullname[:2] == teacher:
+                    name = fullname
+                    break
+            teacher_list += name
+        class_data['teacher_list'] = teacher_list
+        data[f'{k + 1} 교시'] = class_data
+    return data
+
+
 bookmarks['1'] = {
     "진로": {
         "shorten name": "진로",
