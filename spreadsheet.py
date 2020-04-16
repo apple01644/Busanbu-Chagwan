@@ -84,20 +84,20 @@ def run_command(content, roles=[]):
         elif role == '3학년 3반':
             class_number = '3'
 
-    if contnet.find('1반') != -1:
+    if content.find('1반') != -1:
         class_number = '1'
-    if contnet.find('2반') != -1:
+    if content.find('2반') != -1:
         class_number = '2'
-    if contnet.find('3반') != -1:
+    if content.find('3반') != -1:
         class_number = '3'
 
     if class_number is None:
         return {'status': 400, 'body': '반이 유효하지 않습니다.'}
 
     day = 0
-    if contnet.find('내일') != -1:
+    if content.find('내일') != -1:
         day = 1
-    if contnet.find('모레') != -1:
+    if content.find('모레') != -1:
         day = 2
 
     date = datetime.datetime.now().date()
