@@ -70,7 +70,7 @@ async def on_ready():
 @client.event
 async def on_message(msg: discord.Message):
     print(msg)
-    if msg.channel.id == 696585229347061843 and (not msg.author.bot):
+    if msg.channel.id == 696585229347061843 and (not msg.author.bot) and len(msg.content) > 3:
         if msg.content[0] == 'ㄱ':
             if msg.content.find('시간표') == 1:
                 result = spreadsheet.run_command(msg.content, [role.name for role in msg.author.roles])
