@@ -31,8 +31,9 @@ def command_data_to_description(data):
             text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
         else:
             text += f'~~ {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) ~~'
-        if class_data['raw_data']['클래스룸']:
-            text += f" || {class_data['class_data']['link']} ||"
+        if class_data['class_data']:
+            if class_data['class_data']['link']:
+                text += f" || {class_data['class_data']['link']} ||"
 
         text += '\n'
 
