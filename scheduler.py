@@ -1,5 +1,5 @@
 import datetime
-
+import traceback
 import discord
 from discord.ext import tasks
 
@@ -54,8 +54,9 @@ async def class_loop():
                             text += f'> {class_data["teacher_list"]}\n'
                         if class_data["objective"]:
                             text += f'> {class_data["objective"]}\n'
-                        if class_data["class_data"]["link"]:
-                            text += f'> {class_data["class_data"]["link"]}\n'
+                        if class_data["class_data"]:
+                            if class_data["class_data"]["link"]:
+                                text += f'> {class_data["class_data"]["link"]}\n'
                         text += '\n'
                     desc = text
                     break
@@ -68,7 +69,7 @@ async def class_loop():
         if title:
             await alarm_channel.send(embed=discord.Embed(title=title, description=desc))
     except Exception as e:
-        print(e)
+        print(traceback.format_exc(), e)
 
 
 if __name__ == '__main__':
