@@ -15,7 +15,7 @@ discord_token = open('discord_bot_token', 'r').read()
 
 
 def get_embed_from_band_data(data):
-    embed = discord.Embed(title='2018 대구SW고(3학년)', description=html.unescape(data['content']))
+    embed = discord.Embed(title='2018 대구SW고(3학년)', description=html.unescape(data['content']).replace('~', ''))
     embed.set_author(name=data['author']['name'], icon_url=data['author']['profile_image_url'])
     return embed
 
