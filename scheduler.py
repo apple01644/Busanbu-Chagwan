@@ -38,7 +38,7 @@ async def class_loop():
             title = '%02d월 %02d일 알람방' % (last_run_date.month, last_run_date.day)
             desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
             for k in range(3):
-                desc += f'{k + 1}반 알림방: ' + spreadsheet.bookmarks[f'{k + 1}']['알림방'] + '\n'
+                desc += f'{k + 1}반 알림방: ' + spreadsheet.bookmarks[f'{k + 1}']['알림방']["link"] + '\n'
         else:
             for the_class in classes:
                 if last_run_time < the_class['begin'] <= now:
