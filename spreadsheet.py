@@ -151,7 +151,7 @@ def run_command(content, roles=[]):
 
 
 def preprocess_command_data(data):
-    teachers_fullname = ['권오석', '이석우', '조수연', '변강순', '우효림', '장창수', '박종대', '김완태', '김경호', '박정열', '배명호', '김한기', '김소영',
+    teachers_fullname = ['권오석', '이석우', '조수연', '변강순', '우효림', '장창수', '박종대', '김완태', '김경호', '박정열', '배명호', '김한기', '김소현',
                          '박성', '하태효']
 
     for k in range(7):
