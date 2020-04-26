@@ -67,7 +67,11 @@ async def class_loop():
                     break
 
         if title:
-            await alarm_channel.send(embed=discord.Embed(title=title, description=desc))
+            if date.weekday() in [5, 6]:
+                pass
+            else:
+                desc += '\n@everyone'
+                await alarm_channel.send(embed=discord.Embed(title=title, description=desc))
     except Exception as e:
         print(traceback.format_exc(), e)
 
