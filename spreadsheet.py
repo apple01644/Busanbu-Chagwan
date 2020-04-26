@@ -105,7 +105,10 @@ def run_command(content, roles=[]):
     week = get_week(date)
     weekday = date.weekday()
     if week is None:
-        return {'status': 400, 'body': '계획이 없는 일자 입니다.'}
+        if weekday in [5, 6]:
+            return {'status': 400, 'body': '계획이 없는 일자 입니다.'}
+        else:
+            week = 3
 
     data = read_spreadsheet(f'data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
     text = ''
