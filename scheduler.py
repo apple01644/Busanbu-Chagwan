@@ -47,14 +47,15 @@ async def class_loop():
                     text = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n\n'
                     last_run_time = now
                     for k in range(3):
-                        asd = spreadsheet.run_command(f'ㄱ시간표 {k + 1}반')
-                        class_data = spreadsheet.preprocess_command_data(asd)[f'{the_class["index"]} 교시']
+                        raw_data = spreadsheet.run_command(f'ㄱ시간표 {k + 1}반')
+                        class_data = spreadsheet.preprocess_command_data(raw_data)[f'{the_class["index"]} 교시']
 
                         text += f'> {k + 1}반 {class_data["class_name"]}\n'
                         if class_data["teacher_list"]:
                             text += f'> {class_data["teacher_list"]}\n'
-                        #if class_data["objective"]:
-                        #    text += f'> {class_data["objective"]}\n'
+                        if not raw_data['헤더']['is_template']:
+                            if class_data["objective"]:
+                                text += f'> {class_data["objective"]}\n'
                         if class_data["class_data"]:
                             if class_data["class_data"]["link"]:
                                 text += f'> {class_data["class_data"]["link"]}\n'

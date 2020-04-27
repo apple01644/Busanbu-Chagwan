@@ -9,6 +9,10 @@ def get_week(date: datetime.date):
         return 2
     if datetime.date(2020, 4, 20) <= date <= datetime.date(2020, 4, 24):
         return 3
+    if datetime.date(2020, 4, 27) <= date <= datetime.date(2020, 5, 1):
+        return 4
+    if datetime.date(2020, 5, 4) <= date <= datetime.date(2020, 5, 8):
+        return 5
     return None
 
 
@@ -104,11 +108,13 @@ def run_command(content, roles=[]):
     date += datetime.timedelta(days=day)
     week = get_week(date)
     weekday = date.weekday()
+    template = False
     if week is None:
         if weekday in [5, 6]:
             return {'status': 400, 'body': '계획이 없는 일자 입니다.'}
         else:
             week = 3
+            template = True
 
     data = read_spreadsheet(f'data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
     text = ''
@@ -116,6 +122,7 @@ def run_command(content, roles=[]):
     result = {'헤더': {}, 'status': 200}
     result['헤더']['date'] = date
     result['헤더']['class_number'] = class_number
+    result['헤더']['is_template'] = template
 
     k = -1
     for pair in data:
@@ -259,3 +266,7 @@ bookmarks['3'] = {
         "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNTRa"
     }
 }
+
+if __name__ == '__main__':
+    for __role__ in ['3학년 1반', '3학년 2반', '3학년 3반']:
+        print(run_command('ㄱ시간표', roles=[__role__]))
