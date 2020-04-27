@@ -40,8 +40,9 @@ def command_data_to_description(data):
         if class_data['teacher_list'] != '':
             text += f'> ** {class_data["teacher_list"]} **\n'
 
-            #if class_data['objective'] != '':
-            #    text += f"> ** {class_data['objective']} **\n"
+            if not data['헤더']['is_template']:
+                if class_data['objective'] != '':
+                    text += f"> ** {class_data['objective']} **\n"
 
             text += '\n'
 
