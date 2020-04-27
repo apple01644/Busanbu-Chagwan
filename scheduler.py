@@ -2,7 +2,6 @@ import datetime
 import traceback
 import discord
 from discord.ext import tasks
-from datetime import date
 
 import spreadsheet
 
@@ -27,6 +26,7 @@ async def class_loop():
     global last_run_date, last_run_time
     try:
         now = datetime.datetime.now().time()
+        date = datetime.datetime.now().date()
         title = None
         desc = None
 
