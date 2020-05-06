@@ -23,7 +23,7 @@ def read_spreadsheet(path):
         rows = []
         table = []
         string = False
-        for char in file.read().replace('\r\n\r\n', '\r\n'):
+        for char in file.read().replace('\r\n\r\n', '\r\n').replace('\n\n', '\n'):
             if string:
                 if char == '"':
                     string = False
