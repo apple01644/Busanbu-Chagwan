@@ -1,6 +1,6 @@
 import datetime
 import traceback
-
+import config
 import discord
 from discord.ext import tasks
 
@@ -81,7 +81,7 @@ class Scheduler:
                         title=data['title'],
                         description=data['description'] + f'\n<@&{static.discord_info["3rd class role id"]}>'))
 
-            for the_class in static.schedule_info:
+            for the_class in config.schedule_info:
                 if self.last_run_time < the_class['begin'] <= now:
                     loop = True
                     desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n\n'
@@ -116,5 +116,9 @@ scheduler = Scheduler()
 
 @static.DiscordModule.assign_onready(scheduler)
 async def on_ready(discord_bot: static.DiscordBot, self: Scheduler):
-    self.band_channel = discord_bot.client.get_channel(config.discord_info['alarm channel id'])
+    self.alarm_channel = discord_bot.client.get_channel(config.discord_info['alarm channel id'])
+    self.first_channel = discord_bot.client.get_channel(config.discord_info['1st class channel id'])
+    self.second_channel = discord_bot.client.get_channel(config.discord_info['2nd class channel id'])
+    self.third_channel = discord_bot.client.get_channel(config.discord_info['3rd class channel id'])
+
     self.scheduler_loop.start()
