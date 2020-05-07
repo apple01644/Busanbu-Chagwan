@@ -14,16 +14,6 @@ first_channel = None
 second_channel = None
 third_channel = None
 
-classes = [
-    {'index': 1, 'begin': datetime.time(hour=8, minute=40), 'end': datetime.time(hour=9, minute=30)},
-    {'index': 2, 'begin': datetime.time(hour=9, minute=40), 'end': datetime.time(hour=10, minute=30)},
-    {'index': 3, 'begin': datetime.time(hour=10, minute=40), 'end': datetime.time(hour=11, minute=30)},
-    {'index': 4, 'begin': datetime.time(hour=11, minute=40), 'end': datetime.time(hour=12, minute=30)},
-    {'index': 5, 'begin': datetime.time(hour=13, minute=20), 'end': datetime.time(hour=14, minute=10)},
-    {'index': 6, 'begin': datetime.time(hour=14, minute=20), 'end': datetime.time(hour=15, minute=10)},
-    {'index': 7, 'begin': datetime.time(hour=15, minute=20), 'end': datetime.time(hour=16, minute=10)},
-]
-
 
 @tasks.loop(seconds=1.0)
 async def class_loop():
@@ -88,7 +78,7 @@ async def class_loop():
                 await third_channel.send(result['body'])
 
         else:
-            for the_class in classes:
+            for the_class in spreadsheet.classes:
                 if last_run_time < the_class['begin'] <= now:
                     title = f'{the_class["index"]}교시 시작'
                     text = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n\n'

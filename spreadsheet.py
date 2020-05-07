@@ -188,7 +188,7 @@ def command_data_to_description(data):
     text = ''
     for k in range(7):
         class_data = data[f'{k + 1} 교시']
-        class_datetime = datetime.datetime.combine(data['헤더']['date'], scheduler.classes[k]['end'])
+        class_datetime = datetime.datetime.combine(data['헤더']['date'], classes[k]['end'])
         if datetime.datetime.now() < class_datetime:
             text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
         else:
@@ -295,6 +295,16 @@ bookmarks['3'] = {
         "link": "https://classroom.google.com/u/1/c/NjY1MzMzNTQxNTRa"
     }
 }
+
+classes = [
+    {'index': 1, 'begin': datetime.time(hour=8, minute=40), 'end': datetime.time(hour=9, minute=30)},
+    {'index': 2, 'begin': datetime.time(hour=9, minute=40), 'end': datetime.time(hour=10, minute=30)},
+    {'index': 3, 'begin': datetime.time(hour=10, minute=40), 'end': datetime.time(hour=11, minute=30)},
+    {'index': 4, 'begin': datetime.time(hour=11, minute=40), 'end': datetime.time(hour=12, minute=30)},
+    {'index': 5, 'begin': datetime.time(hour=13, minute=20), 'end': datetime.time(hour=14, minute=10)},
+    {'index': 6, 'begin': datetime.time(hour=14, minute=20), 'end': datetime.time(hour=15, minute=10)},
+    {'index': 7, 'begin': datetime.time(hour=15, minute=20), 'end': datetime.time(hour=16, minute=10)},
+]
 
 if __name__ == '__main__':
     for __role__ in ['3학년 1반', '3학년 2반', '3학년 3반']:

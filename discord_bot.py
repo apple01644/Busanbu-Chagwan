@@ -51,6 +51,8 @@ async def on_message(msg: discord.Message):
     global channel, guild, body
     print(msg)
     print(msg.content)
+    if len(msg.content) < 2:
+        return
     if msg.content[0] == 'ㄱ' and (not msg.author.bot) and len(msg.content) > 1:
         if msg.channel.id in [705953156294639746, 705953050040205412, 705953120341065818]:
             if msg.content.find('ㄱ시간표') == 0:
