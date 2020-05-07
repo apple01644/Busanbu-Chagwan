@@ -9,6 +9,9 @@ global last_run_date, last_run_time
 last_run_date = datetime.datetime.now().date()
 last_run_time = datetime.datetime.now().time()
 alarm_channel = None
+first_channel = None
+second_channel = None
+third_channel = None
 
 classes = [
     {'index': 1, 'begin': datetime.time(hour=8, minute=40), 'end': datetime.time(hour=9, minute=30)},
@@ -27,6 +30,8 @@ async def class_loop():
     try:
         now = datetime.datetime.now().time()
         date = datetime.datetime.now().date()
+        bias = datetime.timedelta(seconds=-60)
+        now += bias
         title = None
         desc = None
 
@@ -40,6 +45,23 @@ async def class_loop():
             desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
             for k in range(3):
                 desc += f'{k + 1}반 알림방: ' + spreadsheet.bookmarks[f'{k + 1}']['알림방']["link"] + '\n'
+            desc += '\n다음 시간'
+            for k in range(3):
+                raw_data = spreadsheet.run_command(f'ㄱ시간표 {k + 1}반')
+                class_data = spreadsheet.preprocess_command_data(raw_data)[f'1 교시']
+                desc += f'> {k + 1}반 {class_data["class_name"]}\n'
+                if class_data["teacher_list"]:
+                    desc += f'> {class_data["teacher_list"]}\n'
+                if not raw_data['헤더']['is_template']:
+                    if class_data["objective"]:
+                        desc += f'> {class_data["objective"]}\n'
+                if class_data["class_data"]:
+                    if class_data["class_data"]["link"]:
+                        desc += f'> {class_data["class_data"]["link"]}\n'
+            desc += '\n'
+            await first_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 1반']))
+            await second_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 2반']))
+            await third_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 3반']))
         else:
             for the_class in classes:
                 if last_run_time < the_class['begin'] <= now:
