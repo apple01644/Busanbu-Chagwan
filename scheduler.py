@@ -1,5 +1,6 @@
 import datetime
 import traceback
+
 import discord
 from discord.ext import tasks
 
@@ -59,9 +60,33 @@ async def class_loop():
                     if class_data["class_data"]["link"]:
                         desc += f'> {class_data["class_data"]["link"]}\n'
             desc += '\n'
-            await first_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 1반']))
-            await second_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 2반']))
-            await third_channel.send(spreadsheet.run_command('ㄱ시간표', roles=['3학년 3반']))
+            result = spreadsheet.run_command('ㄱ시간표', ['3학년 1반'])
+            if result['status'] == 200:
+                data = spreadsheet.command_data_to_description(result)
+                await first_channel.send(embed=discord.Embed(
+                    title=data['title'],
+                    description=data['description'] + '\n<@&696586929873092639>'))
+            elif result:
+                await first_channel.send(result['body'])
+
+            result = spreadsheet.run_command('ㄱ시간표', ['3학년 2반'])
+            if result['status'] == 200:
+                data = spreadsheet.command_data_to_description(result)
+                await second_channel.send(embed=discord.Embed(
+                    title=data['title'],
+                    description=data['description'] + '\n<@&696586953415589940>'))
+            elif result:
+                await second_channel.send(result['body'])
+
+            result = spreadsheet.run_command('ㄱ시간표', ['3학년 3반'])
+            if result['status'] == 200:
+                data = spreadsheet.command_data_to_description(result)
+                await third_channel.send(embed=discord.Embed(
+                    title=data['title'],
+                    description=data['description'] + '\n<@&696586970910031923>'))
+            elif result:
+                await third_channel.send(result['body'])
+
         else:
             for the_class in classes:
                 if last_run_time < the_class['begin'] <= now:
@@ -95,7 +120,7 @@ async def class_loop():
                 pass
             else:
                 if desc in None:
-                  desc = ''
+                    desc = ''
                 desc += '\n@everyone'
                 await alarm_channel.send(embed=discord.Embed(title=title, description=desc))
     except Exception as e:

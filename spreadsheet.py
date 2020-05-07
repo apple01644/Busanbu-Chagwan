@@ -77,7 +77,7 @@ def run_command(content, roles=[]):
     if content == 'ㄱ도움':
         return {'status': 400, 'body': 'ㄱ시간표 사용 예시\nㄱ시간표 1반 내일\n'}
         # 'ㄱ시간표 1반 3주차\n'\
-        
+
     class_number = None
 
     for role in roles:
@@ -180,6 +180,35 @@ def preprocess_command_data(data):
         class_data['teacher_list'] = teacher_list
         data[f'{k + 1} 교시'] = class_data
     return data
+
+
+def command_data_to_description(data):
+    data = preprocess_command_data(data)
+    title = "%02d월 %02d일 %1s반 시간표" % (data['헤더']['date'].month, data['헤더']['date'].day, data['헤더']['class_number'])
+    text = ''
+    for k in range(7):
+        class_data = data[f'{k + 1} 교시']
+        class_datetime = datetime.datetime.combine(data['헤더']['date'], scheduler.classes[k]['end'])
+        if datetime.datetime.now() < class_datetime:
+            text += f'** {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) **'
+        else:
+            text += f'~~ {class_data["class_name"]} ({k + 1} 교시 {class_data["time"]}) ~~'
+        if class_data['class_data']:
+            if class_data['class_data']['link']:
+                text += f" || {class_data['class_data']['link']} ||"
+
+        text += '\n'
+
+        if class_data['teacher_list'] != '':
+            text += f'> ** {class_data["teacher_list"]} **\n'
+
+            if not data['헤더']['is_template']:
+                if class_data['objective'] != '':
+                    text += f"> ** {class_data['objective']} **\n"
+
+            text += '\n'
+
+    return {'title': title, 'description': text}
 
 
 bookmarks['1'] = {
