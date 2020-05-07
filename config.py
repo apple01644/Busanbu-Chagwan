@@ -127,6 +127,7 @@ teachers_fullname = [
 ]
 
 discord_info = {
+    'alarm channel id': 699239553789067285,
     '1st class channel id': 705953156294639746,
     '2nd class channel id': 705953050040205412,
     '3rd class channel id': 705953120341065818,

@@ -6,6 +6,7 @@ import discord
 import requests as req
 from discord.ext import tasks
 
+import config
 import static
 
 
@@ -14,6 +15,7 @@ class Band:
         'band': 'https://openapi.band.us/v2.1/bands',
         'posts': 'https://openapi.band.us/v2/band/posts'
     }
+    band_channel = None
 
     def __init__(self):
         self.key = json.load(open('band_api.json', 'r'))
@@ -39,11 +41,11 @@ class Band:
         return embed
 
     async def heartbeat(self):
-        for item in band.get_post():
+        for item in self.get_post():
             print(item)
-            await self.channel.send(embed=self.get_embed_from_band_data(item))
+            await self.band_channel.send(embed=self.get_embed_from_band_data(item))
             for photo in item['photos']:
-                await self.channel.send(photo['url'])
+                await self.band_channel.send(photo['url'])
 
     @tasks.loop(seconds=3600.0)
     async def band_parse_loop(self):
@@ -58,4 +60,5 @@ band = Band()
 
 @static.DiscordModule.assign_onready(band)
 async def on_ready(discord_bot: static.DiscordBot, self: Band):
+    self.band_channel = discord_bot.client.get_channel(config.discord_info['alarm channel id'])
     self.band_parse_loop.start()

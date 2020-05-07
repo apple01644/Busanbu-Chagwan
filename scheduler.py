@@ -113,15 +113,8 @@ class Scheduler:
 
 scheduler = Scheduler()
 
-if __name__ == '__main__':
-    client = discord.Client()
 
-
-    @client.event
-    async def on_ready():
-        print('start')
-        scheduler.scheduler_loop.start()
-
-
-    discord_token = open('discord_bot_token', 'r').read()
-    client.run(discord_token)
+@static.DiscordModule.assign_onready(scheduler)
+async def on_ready(discord_bot: static.DiscordBot, self: Scheduler):
+    self.band_channel = discord_bot.client.get_channel(config.discord_info['alarm channel id'])
+    self.scheduler_loop.start()
