@@ -29,10 +29,10 @@ classes = [
 async def class_loop():
     global last_run_date, last_run_time
     try:
-        now = datetime.datetime.now().time()
-        date = datetime.datetime.now().date()
         bias = datetime.timedelta(seconds=-60)
-        now += bias
+        date_time = datetime.datetime.now() + bias
+        now = date_time.time()
+        date = date_time.date()
         title = None
         desc = None
 
