@@ -46,7 +46,7 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
                    'ㄱ러시안룰렛 김윤수 <-- 러시안 룰렛게임에 참가합니다. 따옴표로 여러명을 여러번 넣을 수 있습니다.\n' + \
                    'ㄱ시작 <-- 러시안 룰렛 인원을 확정하고 게임을 시작합니다.\n' + \
                    'ㄱ발사 <-- 총을 발사합니다.\n' + \
-                   'ㄱ종료 <-- 게임을 종료합니다.'
+                   'ㄱ종료 러시안룰렛 <-- 게임을 종료합니다.'
             await msg.channel.send(desc)
         else:
             if self.run:
@@ -126,29 +126,32 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
         if len(self.gun_slots) == 0:
             await msg.channel.send('참가한 사람이 없습니다.')
         else:
-            target_name = self.get_username(self.user_list[0])
-            await msg.channel.send(f'{target_name}(에)게 총을 겨눴습니다.')
-            await asyncio.sleep(random.randint(1, 3))
-            if self.gun_slots[0]:
-                await msg.channel.send('*탕*')
-                await asyncio.sleep(2)
-                await msg.channel.send(f'<@{self.user_list[0].id}>(은)는 죽었습니다.')
-                await asyncio.sleep(2)
-                await msg.channel.send(f'>>> ***게임 오버***')
-                self.user_list = []
-                self.gun_slots = []
-                self.run = False
-            else:
-                await msg.channel.send('*찰칵*')
-                await asyncio.sleep(2)
-                del self.user_list[0]
-                del self.gun_slots[0]
-                await msg.channel.send(f'다음 순서: <@{self.user_list[0].id}>')
+            if msg.author.id == self.user_list[0].id:
+                target_name = self.get_username(self.user_list[0])
+                await msg.channel.send(f'{target_name}(에)게 총을 겨눴습니다.')
+                await asyncio.sleep(random.randint(1, 3))
+                if self.gun_slots[0]:
+                    await msg.channel.send('*탕*')
+                    await asyncio.sleep(2)
+                    await msg.channel.send(f'<@{self.user_list[0].id}>(은)는 죽었습니다.')
+                    await asyncio.sleep(2)
+                    await msg.channel.send(f'>>> ***게임 오버***')
+                    self.user_list = []
+                    self.gun_slots = []
+                    self.run = False
+                else:
+                    await msg.channel.send('*찰칵*')
+                    await asyncio.sleep(2)
+                    del self.user_list[0]
+                    del self.gun_slots[0]
+                    await msg.channel.send(f'다음 순서: <@{self.user_list[0].id}>')
         self.release()
 
     @static.CommandBinding.assign_command(discord_bot, '종료', channel_filter)
     async def end_game(bot: static.DiscordBot, query: list, msg: discord.Message):
-        if self.run:
+        if not self.run:
+            return
+        if '러시안룰렛' not in query:
             return
         await self.acquire()
         await msg.channel.send(f'>>> ***게임 오버***')
