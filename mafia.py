@@ -101,10 +101,10 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
     async def lock(bot: static.DiscordBot, query: list, msg: discord.Message):
         if not self.run:
             return
+        await self.acquire()
         if len(self.user_list) == 0:
             await msg.channel.send('참가한 사람이 없습니다.')
             return
-        await self.acquire()
         self.gun_slots = [False for k in range(len(self.user_list))]
         self.gun_slots[0] = True
         random.shuffle(self.gun_slots)
@@ -122,10 +122,10 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
     async def fire(bot: static.DiscordBot, query: list, msg: discord.Message):
         if not self.run:
             return
+        await self.acquire()
         if len(self.gun_slots) == 0:
             await msg.channel.send('참가한 사람이 없습니다.')
             return
-        await self.acquire()
         target_name = self.get_username(self.user_list[0])
         await msg.channel.send(f'{target_name}(에)게 총을 겨눴습니다.')
         await asyncio.sleep(random.randint(1, 3))
