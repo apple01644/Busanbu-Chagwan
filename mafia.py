@@ -125,25 +125,25 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
         await self.acquire()
         if len(self.gun_slots) == 0:
             await msg.channel.send('참가한 사람이 없습니다.')
-            return
-        target_name = self.get_username(self.user_list[0])
-        await msg.channel.send(f'{target_name}(에)게 총을 겨눴습니다.')
-        await asyncio.sleep(random.randint(1, 3))
-        if self.gun_slots[0]:
-            await msg.channel.send('*탕*')
-            await asyncio.sleep(2)
-            await msg.channel.send(f'<@{self.user_list[0].id}>(은)는 죽었습니다.')
-            await asyncio.sleep(2)
-            await msg.channel.send(f'>>> ***게임 오버***')
-            self.user_list = []
-            self.gun_slots = []
-            self.run = False
         else:
-            await msg.channel.send('*찰칵*')
-            await asyncio.sleep(2)
-            del self.user_list[0]
-            del self.gun_slots[0]
-            await msg.channel.send(f'다음 순서: <@{self.user_list[0].id}>')
+            target_name = self.get_username(self.user_list[0])
+            await msg.channel.send(f'{target_name}(에)게 총을 겨눴습니다.')
+            await asyncio.sleep(random.randint(1, 3))
+            if self.gun_slots[0]:
+                await msg.channel.send('*탕*')
+                await asyncio.sleep(2)
+                await msg.channel.send(f'<@{self.user_list[0].id}>(은)는 죽었습니다.')
+                await asyncio.sleep(2)
+                await msg.channel.send(f'>>> ***게임 오버***')
+                self.user_list = []
+                self.gun_slots = []
+                self.run = False
+            else:
+                await msg.channel.send('*찰칵*')
+                await asyncio.sleep(2)
+                del self.user_list[0]
+                del self.gun_slots[0]
+                await msg.channel.send(f'다음 순서: <@{self.user_list[0].id}>')
         self.release()
 
     @static.CommandBinding.assign_command(discord_bot, '종료', channel_filter)
