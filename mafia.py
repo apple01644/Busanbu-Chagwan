@@ -16,8 +16,6 @@ class Mafia:
     busy_flag = False
 
     async def acquire(self):
-        while self.busy_flag:
-            await asyncio.sleep(0.05)
         self.busy_flag = True
 
     def release(self):
@@ -51,6 +49,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
         else:
             if self.run:
                 await msg.channel.send(f'>>> 진행중에는 참가가 불가합니다.')
+                return
+            if self.busy_flag:
                 return
             await self.acquire()
             for value in query:
@@ -101,6 +101,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
     async def lock(bot: static.DiscordBot, query: list, msg: discord.Message):
         if not self.run:
             return
+        if self.busy_flag:
+            return
         await self.acquire()
         if len(self.user_list) == 0:
             await msg.channel.send('참가한 사람이 없습니다.')
@@ -121,6 +123,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
     @static.CommandBinding.assign_command(discord_bot, '발사', channel_filter)
     async def fire(bot: static.DiscordBot, query: list, msg: discord.Message):
         if not self.run:
+            return
+        if self.busy_flag:
             return
         await self.acquire()
         if len(self.gun_slots) == 0:
@@ -152,6 +156,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: Mafia):
         if not self.run:
             return
         if '러시안룰렛' not in query:
+            return
+        if self.busy_flag:
             return
         await self.acquire()
         await msg.channel.send(f'>>> ***게임 오버***')
