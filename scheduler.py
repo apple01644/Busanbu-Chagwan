@@ -82,7 +82,7 @@ class Scheduler:
                 desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n\n'
                 for k in range(3):
                     raw_data = spreadsheet.run_command(f'ㄱ시간표 {k + 1}반')
-                    class_data = spreadsheet.preprocess_command_data(raw_data)[f'{the_class["index"]} 교시']
+                    class_data = raw_data[f'{the_class["index"]} 교시']
 
                     desc += f'> {k + 1}반 {class_data["class_name"]}\n'
                     if class_data["teacher_list"]:
