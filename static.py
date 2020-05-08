@@ -4,7 +4,7 @@ import config
 
 
 class CommandBinding:
-    command_binding = {}
+    command_binding = []
 
     def __init__(self, **kwargs):
         self.command_name = 'unknown'
@@ -16,23 +16,25 @@ class CommandBinding:
     @classmethod
     def assign_command(cls, obj, command_name, channel_filter):
         def assign(function):
-            cls.command_binding[command_name] = CommandBinding(baseobject=obj,
-                                                               command_name=command_name,
-                                                               channel_filter=channel_filter,
-                                                               function=function)
+            cls.command_binding.append({'key': command_name, 'value': CommandBinding(baseobject=obj,
+                                                                                     command_name=command_name,
+                                                                                     channel_filter=channel_filter,
+                                                                                     function=function)})
 
         return assign
 
     @classmethod
     async def run_command(cls, command_name, bot, query, msg):
-        if command_name in cls.command_binding:
-            command_info = cls.command_binding[command_name]
-            if msg.channel not in command_info.channel_filter:
-                await msg.add_reaction(emoji='❕')
-                return
-            await command_info.function(command_info.baseobject, query, msg)
-            # def get_timetable(bot: DiscordBot, query: list[str], msg: discord.Message):
-        else:
+        failed_finding = True
+        for bind_pair in cls.command_binding:
+            if bind_pair['key'] == command_name:
+                command_info = bind_pair['value']
+                if msg.channel not in command_info.channel_filter:
+                    await msg.add_reaction(emoji='❕')
+                else:
+                    failed_finding = False
+                    await command_info.function(command_info.baseobject, query, msg)
+        if failed_finding:
             await msg.add_reaction(emoji='❔')
 
 
