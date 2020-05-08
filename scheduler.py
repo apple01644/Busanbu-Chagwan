@@ -85,8 +85,8 @@ class Scheduler:
                     class_data = raw_data[f'{the_class["index"]} 교시']
 
                     desc += f'> {k + 1}반 {class_data["class_name"]}\n'
-                    if class_data["teacher_list"]:
-                        desc += f'> {class_data["teacher_list"]}\n'
+                    if class_data["teacher_desc"]:
+                        desc += f'> {class_data["teacher_desc"]}\n'
                     if not raw_data['헤더']['is_template']:
                         if class_data["objective"]:
                             desc += f'> {class_data["objective"]}\n'
