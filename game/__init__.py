@@ -8,16 +8,19 @@ class GameChannel:
     def __init__(self):
         self.running_game = None
         self.games = {}
+        self.channel = None
 
 
 class GameInterface:
     TITLE = 'unknown'
     COMMANDS = {}
+    LISTENER = None
     MIN_USER = 0
     MAX_USER = 0
 
     def __init__(self):
         self.users = {}
+        self.game_channel = None
 
     def runnable(self):
         return self.MIN_USER <= len(self.users) <= self.MAX_USER
@@ -52,6 +55,13 @@ class GameManager:
     game_channels = {}
     games = {}
 
+    def user_to_member(self, user: discord):
+        for member_name in self.guild_members:
+            member = self.guild_members[member_name]
+            if member.id == user.id:
+                return member
+        return None
+
     async def ready(self, discord_bot):
         for member in self.guild.members:
             if member.nick is not None:
@@ -61,12 +71,15 @@ class GameManager:
         for channel in self.allowed_channels:
             game_channel = GameChannel()
             game_channel.games = dict(self.games)
+            game_channel.channel = channel
             for game_name in self.games:
                 game = self.games[game_name]()
-                game.channel = channel
+                game.game_channel = game_channel
                 for command_name in game.COMMANDS:
                     static.CommandBinding.assign_command(game_channel, command_name, [channel])(
                         game.COMMANDS[command_name])
+                if game.LISTENER is not None:
+                    static.CommandBinding.assign_listener(game_channel, game.TITLE, None)(game.LISTENER)
                 game_channel.games[game_name] = game
             self.game_channels[channel.id] = game_channel
 
@@ -118,7 +131,11 @@ async def on_ready(discord_bot: static.DiscordBot, self: GameManager):
                 if len(game.users) >= game.MAX_USER:
                     await msg.channel.send(f'>>> 인원제한을 초과하여 참가하지 못 했습니다.')
                 else:
-                    game.users[nick_to_name(msg.author)] = msg.author
+                    for user_name in self.guild_members:
+                        user = self.guild_members[user_name]
+                        if msg.author.id == user.id:
+                            game.users[user_name] = user
+                            break
             else:
                 for user_name in query[1:]:
                     if user_name in self.guild_members:

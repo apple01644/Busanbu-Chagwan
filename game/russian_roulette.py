@@ -71,6 +71,7 @@ class RussianRouletteGame(GameInterface):
         self.users = {}
         channel.running_game = None
         self.busy = False
+        await msg.channel.send(f'>>> {self.TITLE}을 종료했습니다.')
 
 
 game_manager.games['러시안룰렛'] = RussianRouletteGame

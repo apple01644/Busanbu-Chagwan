@@ -8,6 +8,7 @@ import config
 
 class CommandBinding:
     command_binding = []
+    listener_binding = []
 
     def __init__(self, **kwargs):
         self.command_name = 'unknown'
@@ -27,13 +28,35 @@ class CommandBinding:
         return assign
 
     @classmethod
+    def assign_listener(cls, obj, listener_name, channel_filter):
+        def assign(function):
+            cls.listener_binding.append(CommandBinding(baseobject=obj,
+                                                       command_name=listener_name,
+                                                       channel_filter=channel_filter,
+                                                       function=function))
+
+        return assign
+
+    @classmethod
+    async def run_listener(cls, bot, msg):
+        for listener in cls.listener_binding:
+            try:
+                await listener.function(listener.baseobject, bot, msg)
+            except:
+                await msg.add_reaction(emoji='❕')
+                error = traceback.format_exc()
+                error = error.replace(os.path.dirname(os.path.realpath(__file__)), ".")
+                print(error)
+
+    @classmethod
     async def run_command(cls, command_name, bot, query, msg):
         match_count = 0
+        missing_count = 0
         for bind_pair in cls.command_binding:
             if bind_pair['key'] == command_name:
                 command_info = bind_pair['value']
                 if msg.channel not in command_info.channel_filter:
-                    pass  # await msg.add_reaction(emoji='🔒')
+                    missing_count += 1
                 else:
                     match_count += 1
                     try:
@@ -44,8 +67,10 @@ class CommandBinding:
                         error = error.replace(os.path.dirname(os.path.realpath(__file__)), ".")
                         print(error)
         if match_count == 0:
-            print(match_count)
-            await msg.add_reaction(emoji='❔')
+            if missing_count > 0:
+                await msg.add_reaction(emoji='🔒')
+            else:
+                await msg.add_reaction(emoji='❔')
 
 
 class DiscordModule:
@@ -88,18 +113,21 @@ class DiscordBot:
         await DiscordModule.match_onready(self)
 
     async def read_msg(self, msg: discord.Message):
-        if len(msg.content) < 2 or msg.author.bot:
+        if msg.author.bot:
             return
-        if msg.content[0] != 'ㄱ':
-            return
-        command = msg.content
-        query = []
-        if msg.content.find(' ') != -1:
-            command = msg.content[:msg.content.find(' ')]
-            query = [arg.strip() for arg in msg.content[msg.content.find(' ') + 1:].split(',')]
-        command = command[1:]
 
-        await CommandBinding.run_command(command, self, query, msg)
+        if isinstance(msg.channel, discord.DMChannel):
+            await CommandBinding.run_listener(self, msg)
+        else:
+            if msg.content[0] != 'ㄱ':
+                return
+            command = msg.content
+            query = []
+            if msg.content.find(' ') != -1:
+                command = msg.content[:msg.content.find(' ')]
+                query = [arg.strip() for arg in msg.content[msg.content.find(' ') + 1:].split(',')]
+            command = command[1:]
+            await CommandBinding.run_command(command, self, query, msg)
 
 
 __client__ = discord.Client()
@@ -113,5 +141,5 @@ async def on_ready():
 
 
 @__client__.event
-async def on_message(msg):
+async def on_message(msg: discord.Message):
     await discord_bot.read_msg(msg)
