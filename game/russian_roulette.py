@@ -72,4 +72,4 @@ class RussianRouletteGame(GameInterface):
         self.busy = False
 
 
-game_manager['러시안룰렛'] = RussianRouletteGame
+game_manager.games['러시안룰렛'] = RussianRouletteGame
