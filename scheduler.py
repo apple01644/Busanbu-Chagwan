@@ -54,6 +54,7 @@ class Scheduler:
                 if class_data["class_data"]:
                     if class_data["class_data"]["link"]:
                         desc += f'> {class_data["class_data"]["link"]}\n'
+            desc += '\n**학생건강상태 조사**에 응답해주세요.'
             desc += '\n@everyone'
             await self.alarm_channel.send(embed=discord.Embed(title=title, description=desc))
 
