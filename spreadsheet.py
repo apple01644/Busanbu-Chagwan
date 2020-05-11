@@ -104,7 +104,7 @@ class SpreadSheet:
                 week = 5
                 is_template = True
 
-        data = cls.read_spreadsheet(f'data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
+        data = cls.read_spreadsheet(f'.data/spreadsheets/{class_number}반-{week}주차.txt')[weekday]
 
         result = {'헤더': {'date': date, 'class_number': class_number, 'is_template': is_template}, 'status': 200}
 

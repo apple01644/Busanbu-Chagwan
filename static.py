@@ -1,3 +1,6 @@
+import os
+import traceback
+
 import discord
 
 import config
@@ -25,16 +28,23 @@ class CommandBinding:
 
     @classmethod
     async def run_command(cls, command_name, bot, query, msg):
-        failed_finding = True
+        match_count = 0
         for bind_pair in cls.command_binding:
             if bind_pair['key'] == command_name:
                 command_info = bind_pair['value']
                 if msg.channel not in command_info.channel_filter:
-                    await msg.add_reaction(emoji='❕')
+                    pass  # await msg.add_reaction(emoji='🔒')
                 else:
-                    failed_finding = False
-                    await command_info.function(command_info.baseobject, query, msg)
-        if failed_finding:
+                    match_count += 1
+                    try:
+                        await command_info.function(command_info.baseobject, query, msg)
+                    except:
+                        await msg.add_reaction(emoji='❕')
+                        error = traceback.format_exc()
+                        error = error.replace(os.path.dirname(os.path.realpath(__file__)), ".")
+                        print(error)
+        if match_count == 0:
+            print(match_count)
             await msg.add_reaction(emoji='❔')
 
 
