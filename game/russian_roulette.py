@@ -27,8 +27,8 @@ class RussianRouletteGame(GameInterface):
         self.busy = False
 
     def on_member_changed(self):
-        self.gun = [False for x in range(6)]
-        self.gun[random.randint(0, 5)] = True
+        self.gun = [False for x in range(12)]
+        self.gun[random.randint(0, 11)] = True
         self.user_index = 0
         self.username_list = list(self.users.keys())
         self.user_list = list(self.users.values())
