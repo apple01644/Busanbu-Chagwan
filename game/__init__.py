@@ -65,7 +65,7 @@ class GameManager:
                 game = self.games[game_name]()
                 game.channel = channel
                 for command_name in game.COMMANDS:
-                    static.CommandBinding.assign_command(self.game_channels[channel.id], command_name, [channel])(
+                    static.CommandBinding.assign_command(game_channel, command_name, [channel])(
                         game.COMMANDS[command_name])
                 game_channel.games[game_name] = game
             self.game_channels[channel.id] = game_channel

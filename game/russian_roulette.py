@@ -37,7 +37,7 @@ class RussianRouletteGame(GameInterface):
         await self.channel.send(f'>>> 다음 차례는 <@{self.user_list[self.user_index].id}> 입니다.')
 
     async def shoot(self, channel: GameChannel, query: list, msg: discord.Message):
-        if self.busy:
+        if self.busy or self != channel.running_game:
             return
         self.busy = True
         if msg.author.id != self.user_list[self.user_index].id:
@@ -64,7 +64,7 @@ class RussianRouletteGame(GameInterface):
         self.busy = False
 
     async def end_game(self, channel: GameChannel, query: list, msg: discord.Message):
-        if self.busy:
+        if self.busy or self != channel.running_game:
             return
         self.busy = True
         self.users = {}
