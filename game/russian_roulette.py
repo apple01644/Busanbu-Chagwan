@@ -41,6 +41,7 @@ class RussianRouletteGame(GameInterface):
             return
         self.busy = True
         if msg.author.id != self.user_list[self.user_index].id:
+            self.busy = False
             return
         await asyncio.sleep(random.randint(1, 3))
         if self.gun[0]:
