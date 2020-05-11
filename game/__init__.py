@@ -35,8 +35,8 @@ def is_admin(user: discord.User):
 
 def nick_to_name(nick):
     copied_nick = str(nick)
-    if copied_nick.find('(') != -1:
-        copied_nick = (copied_nick[:copied_nick.find('(')] + copied_nick[copied_nick.find(')') + 1:]).strip()
+    # if copied_nick.find('(') != -1:
+    #    copied_nick = (copied_nick[:copied_nick.find('(')] + copied_nick[copied_nick.find(')') + 1:]).strip()
     if len(copied_nick) > 3:
         copied_nick = copied_nick[-3:]
     return copied_nick
@@ -114,17 +114,23 @@ async def on_ready(discord_bot: static.DiscordBot, self: GameManager):
                 await msg.channel.send(f'>>> {game_name}(은)는 없는 게임입니다.')
                 return
             game = game_channel.games[game_name]
-            for user_name in query[1:]:
-                if user_name in self.guild_members:
-                    user = self.guild_members[user_name]
-                    if is_admin(msg.author) or msg.author.id == user.id:
-                        if len(game.users) >= game.MAX_USER:
-                            await msg.channel.send(f'>>> 인원제한을 초과하여 일부 인원은 참가하지 못 했습니다.')
-                            break
+            if len(query) == 1:
+                if len(game.users) >= game.MAX_USER:
+                    await msg.channel.send(f'>>> 인원제한을 초과하여 참가하지 못 했습니다.')
+                else:
+                    game.users[nick_to_name(msg.author)] = msg.author
+            else:
+                for user_name in query[1:]:
+                    if user_name in self.guild_members:
+                        user = self.guild_members[user_name]
+                        if is_admin(msg.author) or msg.author.id == user.id:
+                            if len(game.users) >= game.MAX_USER:
+                                await msg.channel.send(f'>>> 인원제한을 초과하여 일부 인원은 참가하지 못 했습니다.')
+                                break
+                            else:
+                                game.users[user_name] = user
                         else:
-                            game.users[user_name] = user
-                    else:
-                        await msg.add_reaction(emoji='🛑')
+                            await msg.add_reaction(emoji='🛑')
             await msg.add_reaction(emoji=self.number_to_emote(len(game.users)))
 
     @static.CommandBinding.assign_command(discord_bot, '게임시작', self.allowed_channels)
