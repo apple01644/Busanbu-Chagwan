@@ -91,11 +91,19 @@ class MafiaGame(GameInterface):
             if self.day > 0:
                 await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
                 await asyncio.sleep(30)
+                if not self.run:
+                    break
             await self.broadcast('>>> 30초 뒤 해가 뜹니다.')
             await asyncio.sleep(20)
+            if not self.run:
+                break
             await self.broadcast('>>> 10초 뒤 해가 뜹니다.')
             await asyncio.sleep(10)
+            if not self.run:
+                break
             await self.day_begin()
+            if not self.run:
+                break
             for player in self.players:
                 await player.user.edit(reason='For mafia', mute=False, deafen=False)
             if self.is_game_finished() != '':
@@ -104,13 +112,23 @@ class MafiaGame(GameInterface):
             if self.day > 1:
                 await self.broadcast('>>> 2분 뒤 해가 저뭅니다.')
                 await asyncio.sleep(60)
+                if not self.run:
+                    break
             await self.broadcast('>>> 60초 뒤 해가 저뭅니다.')
             await asyncio.sleep(30)
+            if not self.run:
+                break
             await self.broadcast('>>> 30초 뒤 해가 저뭅니다.')
             await asyncio.sleep(20)
+            if not self.run:
+                break
             await self.broadcast('>>> 10초 뒤 해가 저뭅니다.')
             await asyncio.sleep(10)
+            if not self.run:
+                break
             await self.night_begin()
+            if not self.run:
+                break
             if self.is_game_finished() != '':
                 break
 
