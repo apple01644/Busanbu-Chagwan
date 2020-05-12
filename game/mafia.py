@@ -142,10 +142,10 @@ class MafiaGame(GameInterface):
                 await player.user.edit(reason='For mafia', mute=True, deafen=True)
             except discord.HTTPException as he:
                 pass
-        await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
-        await asyncio.sleep(30)
         self.busy = False
         self.mode = '밤'
+        await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
+        await asyncio.sleep(30)
         while self.run:
             # if self.day > 0:
             #    await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
@@ -493,7 +493,7 @@ class MafiaGame(GameInterface):
             target = self.players[self.nick_to_id[query]]
             await self.write_report(channel, actor, target, msg)
         elif actor.live and msg.content.find('ㄱ목표설정 ') == 0:
-            query = msg.content[4:].strip()
+            query = msg.content[6:].strip()
             if query not in self.nick_to_id:
                 self.busy = False
                 return
