@@ -369,7 +369,7 @@ class MafiaGame(GameInterface):
                 if player.pk in self.chooses.keys():
                     player.data[self.supporter_count] = 0
             elif player.role == self.shaman:
-                await self.send_message_for_afterlives(player.user, '무당이 죽은 혼들을 부르고 있습니다...')
+                await self.send_message_for_afterlives(player, '무당이 죽은 혼들을 부르고 있습니다...')
 
         votes = {}
         for vote in self.chooses.values():
@@ -395,6 +395,9 @@ class MafiaGame(GameInterface):
                     is_draw = True
             if is_draw:
                 await self.broadcast(f'>>> 최다득표자가 1명이 넘기 때문에 투표는 무효가 됩니다.')
+            elif self.players[votes[-1][0]].role == self.politician:
+                await self.broadcast(
+                    f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조 현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다. 에 의하여 처벌이 불가합니다./')
             else:
                 target = self.players[votes[-1][0]]
                 target.live = False
