@@ -34,7 +34,7 @@ class RussianRouletteGame(GameInterface):
         self.user_list = list(self.users.values())
 
     async def show_next_turn(self):
-        await self.channel.send(f'>>> 다음 차례는 <@{self.user_list[self.user_index].id}> 입니다.')
+        await self.game_channel.channel.send(f'>>> 다음 차례는 <@{self.user_list[self.user_index].id}> 입니다.')
 
     async def shoot(self, channel: GameChannel, query: list, msg: discord.Message):
         if self.busy or self != channel.running_game:
@@ -45,20 +45,20 @@ class RussianRouletteGame(GameInterface):
             return
         await asyncio.sleep(random.randint(1, 3))
         if self.gun[0]:
-            await self.channel.send(f'<:tang:709200132922671106>')
-            await self.channel.send(f'>>> <@{self.user_list[self.user_index].id}> 가 죽었습니다.')
+            await self.game_channel.channel.send(f'<:tang:709200132922671106>')
+            await self.game_channel.channel.send(f'>>> <@{self.user_list[self.user_index].id}> 가 죽었습니다.')
 
             del self.users[self.username_list[self.user_index]]
             self.on_member_changed()
 
             if len(self.user_list) == 1:
-                await self.channel.send(f'>>> 승자는 <@{self.user_list[0].id}> 입니다.')
+                await self.game_channel.channel.send(f'>>> 승자는 <@{self.user_list[0].id}> 입니다.')
                 self.busy = False
                 await self.end_game(channel, query, msg)
                 return
             await self.show_next_turn()
         else:
-            await self.channel.send(f'<:chulkuk:709200132381474890>')
+            await self.game_channel.channel.send(f'<:chulkuk:709200132381474890>')
             self.gun = self.gun[1:]
             self.user_index = (self.user_index + 1) % len(self.users)
             await self.show_next_turn()
