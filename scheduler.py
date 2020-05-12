@@ -41,7 +41,7 @@ class Scheduler:
             title = '%02d월 %02d일 알람방' % (self.last_run_date.month, self.last_run_date.day)
             desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
             for k in [1, 2, 3]:
-                desc += f'{k}반 알림방: ' + config.learn_class_info[k]['알림방']["link"] + '\n'
+                desc += f'{k}반 알림방: ' + config.learn_class_info[k]['bookmark']['알림방']["link"] + '\n'
             desc += '\n다음 시간'
             for k in [1, 2, 3]:
                 class_data = spreadsheet.run_command(f'ㄱ시간표 {k}반')['1교시']

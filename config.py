@@ -89,10 +89,11 @@ learn_class_info = {
         }
     },
     3: {
-        "bookmark": {"진로": {
-            "shorten name": "진로",
-            "link": "https://classroom.google.com/u/1/c/NjgxMTQzNjE4ODRa"
-        },
+        "bookmark": {
+            "진로": {
+                "shorten name": "진로",
+                "link": "https://classroom.google.com/u/1/c/NjgxMTQzNjE4ODRa"
+            },
             "프로젝트실습": {
                 "shorten name": "프로",
                 "link": "https://classroom.google.com/u/1/c/NjY0NTMxNDk0NzRa"
