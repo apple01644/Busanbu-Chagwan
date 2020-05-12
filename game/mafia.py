@@ -134,7 +134,10 @@ class MafiaGame(GameInterface):
 
             dm_channel = await get_dm_channel(player.user)
             await dm_channel.send(embed=embed)
-            await player.user.edit(reason='For mafia', mute=True, deafen=True)
+            try:
+                await player.user.edit(reason='For mafia', mute=True, deafen=True)
+            except discord.HTTPException as he:
+                pass
         self.busy = False
         self.mode = '밤'
         while self.run:
@@ -155,10 +158,13 @@ class MafiaGame(GameInterface):
             if not self.run:
                 break
             for player in self.players:
-                if player.live:
-                    await player.user.edit(reason='For mafia', mute=False, deafen=False)
-                else:
-                    await player.user.edit(reason='For mafia', mute=True, deafen=False)
+                try:
+                    if player.live:
+                        await player.user.edit(reason='For mafia', mute=False, deafen=False)
+                    else:
+                        await player.user.edit(reason='For mafia', mute=True, deafen=False)
+                except discord.HTTPException as he:
+                    pass
             if self.is_game_finished() != '':
                 break
 
@@ -185,10 +191,13 @@ class MafiaGame(GameInterface):
             if self.is_game_finished() != '':
                 break
             for player in self.players:
-                if player.live:
-                    await player.user.edit(reason='For mafia', mute=True, deafen=True)
-                else:
-                    await player.user.edit(reason='For mafia', mute=False, deafen=False)
+                try:
+                    if player.live:
+                        await player.user.edit(reason='For mafia', mute=True, deafen=True)
+                    else:
+                        await player.user.edit(reason='For mafia', mute=False, deafen=False)
+                except discord.HTTPException as he:
+                    pass
 
         await self.end_game()
 
@@ -307,7 +316,10 @@ class MafiaGame(GameInterface):
                 else:
                     embed.title = f'{target.nmae}님이 행방불명 됐습니다.'
                 target.live = False
-                await target.user.edit(reason='For mafia', mute=False, deafen=False)
+                try:
+                    await target.user.edit(reason='For mafia', mute=False, deafen=False)
+                except discord.HTTPException as he:
+                    pass
         else:
             embed.title = '낮이 밝았습니다. 아무일도 일어나지 않았습니다.'
         embed.description += '\n생존자들: '
@@ -363,7 +375,10 @@ class MafiaGame(GameInterface):
             else:
                 target = self.players[votes[-1][0]]
                 target.live = False
-                await target.user.edit(reason='For mafia', mute=False, deafen=False)
+                try:
+                    await target.user.edit(reason='For mafia', mute=False, deafen=False)
+                except discord.HTTPException as he:
+                    pass
 
                 embed = discord.Embed()
                 embed.set_author(name=target.name, icon_url=target.user.avatar_url)
@@ -380,7 +395,10 @@ class MafiaGame(GameInterface):
                         if terror_target.live:
                             terror_target.live = False
                             await self.broadcast(f'>>> {terror_target.name}가 집에 들어가는 순간 폭발과 함께 사라졌습니다.')
-                            await terror_target.user.edit(reason='For mafia', mute=False, deafen=False)
+                            try:
+                                await terror_target.user.edit(reason='For mafia', mute=False, deafen=False)
+                            except discord.HTTPException as he:
+                                pass
                         else:
                             await self.broadcast(f'>>> {terror_target.name}의 집에서 폭발음이 들었습니다.')
                 else:
@@ -621,7 +639,10 @@ class MafiaGame(GameInterface):
                 self.busy = False
                 return
         for player in self.players:
-            await player.user.edit(reason='For mafia', mute=False, deafen=False)
+            try:
+                await player.user.edit(reason='For mafia', mute=False, deafen=False)
+            except discord.HTTPException as he:
+                pass
 
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
