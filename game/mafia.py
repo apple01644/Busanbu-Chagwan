@@ -606,20 +606,22 @@ class MafiaGame(GameInterface):
         else:
             embed.title = '[뉴스] '
 
-        if actor.role == self.mafia:
+        if target.role == self.mafia:
             embed.title += f'{target.name}은 마피아로 밝혀졌습니다!!!'
-        elif actor.role == self.police:
+        elif target.role == self.police:
             embed.title += f'{target.name}은 경찰로 밝혀졌습니다!!!'
-        elif actor.role == self.doctor:
+        elif target.role == self.doctor:
             embed.title += f'{target.name}은 의사로 밝혀졌습니다!!!'
-        elif actor.role == self.reporter:
+        elif target.role == self.reporter:
             embed.title += f'{target.name}은 기자로 밝혀졌습니다!!!'
-        elif actor.role == self.politician:
+        elif target.role == self.politician:
             embed.title += f'{target.name}은 정치인으로 밝혀졌습니다!!!'
-        elif actor.role == self.terrorist:
+        elif target.role == self.terrorist:
             embed.title += f'{target.name}은 테러리스트로 밝혀졌습니다!!!'
-        elif actor.role == self.leader:
+        elif target.role == self.leader:
             embed.title += f'{target.name}은 장군으로 밝혀졌습니다!!!'
+        elif target.role == self.shaman:
+            embed.title += f'{target.name}은 무당으로 밝혀졌습니다!!!'
         else:
             embed.title += f'{target.name}은 무직고졸백수로 밝혀졌습니다!!!'
         await self.broadcast(embed=embed)
