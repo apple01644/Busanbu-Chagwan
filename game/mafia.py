@@ -110,6 +110,8 @@ class MafiaGame(GameInterface):
             for player in self.players:
                 if player.live:
                     await player.user.edit(reason='For mafia', mute=False, deafen=False)
+                else:
+                    await player.user.edit(reason='For mafia', mute=True, deafen=False)
             if self.is_game_finished() != '':
                 break
 
@@ -136,7 +138,10 @@ class MafiaGame(GameInterface):
             if self.is_game_finished() != '':
                 break
             for player in self.players:
-                await player.user.edit(reason='For mafia', mute=True, deafen=True)
+                if player.live:
+                    await player.user.edit(reason='For mafia', mute=True, deafen=True)
+                else:
+                    await player.user.edit(reason='For mafia', mute=False, deafen=False)
 
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
