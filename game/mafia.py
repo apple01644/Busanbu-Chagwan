@@ -120,7 +120,7 @@ class MafiaGame(GameInterface):
             elif player.role == self.terrorist:
                 embed.title = f'당신은 테러리스트입니다.'
                 embed.description += '\n폭사 : 투표로 죽게되면 대상으로 정한 사람을 같이 죽입니다.'
-                embed.description += '\nㄱ폭사 홍길동 : 이 명령어로 당신이 투표로 죽게 될 때 같이 죽일 사람을 정할 수 있습니다.'
+                embed.description += '\nㄱ목표설정 홍길동 : 이 명령어로 폭사할 때 죽일 사람을 정할 수 있습니다.'
                 embed.description += '\n당신의 테러리스트입니다. 당신의 능력으로 세상을 공포 속으로 빠트리세요.'
             elif player.role == self.leader:
                 embed.title = f'당신은 장군입니다.'
@@ -471,6 +471,22 @@ class MafiaGame(GameInterface):
                 return
             target = self.players[self.nick_to_id[query]]
             await self.heal(channel, actor, target, msg)
+        elif actor.live and msg.content.find('ㄱ계엄령') == 0:
+            await self.toggle_martial_law(channel, actor, msg)
+        elif actor.live and msg.content.find('ㄱ특종 ') == 0:
+            query = msg.content[4:].strip()
+            if query not in self.nick_to_id:
+                self.busy = False
+                return
+            target = self.players[self.nick_to_id[query]]
+            await self.write_report(channel, actor, target, msg)
+        elif actor.live and msg.content.find('ㄱ목표설정 ') == 0:
+            query = msg.content[4:].strip()
+            if query not in self.nick_to_id:
+                self.busy = False
+                return
+            target = self.players[self.nick_to_id[query]]
+            await self.set_terror_target(channel, actor, target, msg)
         elif msg.content.find('ㄱ') == 0:
             await msg.add_reaction(emoji='🛑')
         else:
@@ -610,7 +626,7 @@ class MafiaGame(GameInterface):
 
     async def set_terror_target(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if actor.role != self.terrorist:
-            await msg.channel.send('>>> ㄱ폭사 명령어는 테러리스트만 사용 가능합니다.')
+            await msg.channel.send('>>> ㄱ목표설정 명령어는 테러리스트만 사용 가능합니다.')
             return
 
         actor.data[self.terror_target] = target.pk
