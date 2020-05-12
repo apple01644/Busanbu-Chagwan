@@ -119,7 +119,8 @@ class MafiaGame(GameInterface):
                 embed.description += '\n당신의 기자입니다. 주목받는 특종을 내십시요.'
             elif player.role == self.politician:
                 embed.title = f'당신은 정치인입니다.'
-                embed.description += '\n고유 능력: 매일 밤이 될 때 마다 지지자의 표를 1표식 얻을 수 있습니다. 투표를 한 뒤 누적된 표는 초기화 됩니다.'
+                embed.description += '\n지지자들: 매일 밤이 될 때 마다 지지자의 표를 1표식 얻을 수 있습니다. 투표를 한 뒤 누적된 표는 초기화 됩니다.'
+                embed.description += '\n불체포특권: 정치인은 투표로 죽지 않습니다.'
                 embed.description += '\n당신의 정치인입니다. 다른 사람들이 당신의 뜻을 따르도록 하세요.'
             elif player.role == self.terrorist:
                 embed.title = f'당신은 테러리스트입니다.'
@@ -416,7 +417,7 @@ class MafiaGame(GameInterface):
                     await self.broadcast('>>> 그는 마피아로 밝혀졌습니다.')
                 elif target.role == self.terrorist:
                     await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
-                    if target.data[self.terror_target] == -1:
+                    if target.data[self.terror_target] != -1:
                         terror_target = self.players[target.data[self.terror_target]]
                         if terror_target.live:
                             terror_target.live = False
