@@ -244,14 +244,25 @@ class MafiaGame(GameInterface):
                 dm_channel = await get_dm_channel(player.user)
                 await dm_channel.send(embed=embed)
 
+    async def send_message_for_mafia(self, target: MafiaUser, content: str):
+        embed = discord.Embed()
+        embed.set_author(name=target.name, icon_url=target.user.avatar_url)
+        embed.description = content
+        for player in self.players:
+            if player.pk != target.pk:
+                if player.live and player.role == self.mafia:
+                    dm_channel = await get_dm_channel(player.user)
+                    await dm_channel.send(embed=embed)
+
     async def send_message_for_afterlives(self, target: MafiaUser, content: str):
         embed = discord.Embed()
         embed.set_author(name=target.name, icon_url=target.user.avatar_url)
         embed.description = content
         for player in self.players:
-            if (not player.live) or player.role == self.shaman:
-                dm_channel = await get_dm_channel(player.user)
-                await dm_channel.send(embed=embed)
+            if player.pk != target.pk:
+                if (not player.live) or player.role == self.shaman:
+                    dm_channel = await get_dm_channel(player.user)
+                    await dm_channel.send(embed=embed)
 
     def get_user_by_id(self, user: discord.User):
         for player in self.players:
