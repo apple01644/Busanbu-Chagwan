@@ -142,6 +142,8 @@ class MafiaGame(GameInterface):
                 await player.user.edit(reason='For mafia', mute=True, deafen=True)
             except discord.HTTPException as he:
                 pass
+        await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
+        await asyncio.sleep(30)
         self.busy = False
         self.mode = '밤'
         while self.run:
@@ -155,7 +157,13 @@ class MafiaGame(GameInterface):
             if not self.run:
                 break
             await self.broadcast('>>> 10초 뒤 해가 뜹니다.')
-            await asyncio.sleep(10)
+            await asyncio.sleep(7)
+            await self.broadcast('>>> 3초 뒤 해가 뜹니다.')
+            await asyncio.sleep(1)
+            await self.broadcast('>>> 2초 뒤 해가 뜹니다.')
+            await asyncio.sleep(1)
+            await self.broadcast('>>> 1초 뒤 해가 뜹니다.')
+            await asyncio.sleep(1)
             if not self.run:
                 break
             await self.day_begin()
