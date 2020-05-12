@@ -59,10 +59,12 @@ class MafiaGame(GameInterface):
         self.nick_to_id = {nick: k for k, nick in enumerate(self.users)}
 
         self.players[dices[0]].role = 'mafia'
+        await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
         if len(self.players) >= 6:
             self.players[dices[1]].role = 'mafia'
-            self.players[dices[2]].role = 'doctor'
-            self.players[dices[3]].role = 'police'
+            await self.send_message_for_mafia(self.players[dices[1]], '뭘 그렇게 보쇼? 나 마피아요')
+        self.players[dices[2]].role = 'doctor'
+        self.players[dices[3]].role = 'police'
         for player in self.players:
             embed = discord.Embed()
             embed.set_author(name=player.name, icon_url=player.user.avatar_url)
@@ -131,6 +133,8 @@ class MafiaGame(GameInterface):
                 break
             if self.is_game_finished() != '':
                 break
+            for player in self.players:
+                await player.user.edit(reason='For mafia', mute=True, deafen=True)
 
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
@@ -218,7 +222,7 @@ class MafiaGame(GameInterface):
 
             if 'doctor' in self.chooses:
                 if target.pk == self.chooses['doctor']:
-                    embed.title = f'의사가 {target.name}>(을)를 살려냈습니다.'
+                    embed.title = f'의사가 {target.name}(을)를 살려냈습니다.'
                     kill = False
             if kill:
                 embed.title = f'{target.name}님이 사망했습니다.\n'
@@ -424,6 +428,8 @@ class MafiaGame(GameInterface):
         if not target.live:
             await msg.channel.send('>>> 죽은 사람을 공격 대상으로 삼을 수 없습니다.')
             return
+
+        await self.send_message_for_mafia(actor, f'{target.name}를 공격 대상으로 삼았습니다.')
 
         self.chooses['mafia'] = target.pk
         await msg.add_reaction(emoji='👌')
