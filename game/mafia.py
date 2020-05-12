@@ -62,7 +62,7 @@ class MafiaGame(GameInterface):
         self.run = True
         self.martial_law = False
 
-        dices = [k for k in range(len(self.players))]
+        dices = [k for k in range(len(self.users))]
         random.shuffle(dices)
         self.players = [MafiaUser(pk=k, user=self.users[username], name=username) for k, username in
                         enumerate(self.users)]
