@@ -59,7 +59,7 @@ class MafiaGame(GameInterface):
         self.nick_to_id = {nick: k for k, nick in enumerate(self.users)}
 
         self.players[dices[0]].role = 'mafia'
-        if len(self.user_list) >= 6:
+        if len(self.players) >= 6:
             self.players[dices[1]].role = 'mafia'
             self.players[dices[2]].role = 'doctor'
             self.players[dices[3]].role = 'police'
