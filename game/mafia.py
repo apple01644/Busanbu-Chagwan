@@ -48,7 +48,7 @@ class MafiaGame(GameInterface):
         self.run = True
 
         dices = [-1 for k in range(4)]
-        for k in range(1):
+        for k in range(4):
             while True:
                 dice = random.randint(0, len(self.users) - 1)
                 if dice not in dices:
@@ -246,6 +246,7 @@ class MafiaGame(GameInterface):
                 else:
                     embed.title = f'{target.nmae}님이 행방불명 됐습니다.'
                 target.live = False
+                await target.user.edit(reason='For mafia', mute=False, deafen=False)
         else:
             embed.title = '낮이 밝았습니다. 아무일도 일어나지 않았습니다.'
         embed.description += '\n생존자들: '
@@ -292,6 +293,7 @@ class MafiaGame(GameInterface):
             else:
                 target = self.players[votes[-1][0]]
                 target.live = False
+                await target.user.edit(reason='For mafia', mute=False, deafen=False)
 
                 embed = discord.Embed()
                 embed.set_author(name=target.name, icon_url=target.user.avatar_url)
@@ -392,7 +394,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 밤에만 조사할 수 있습니다.')
             return
 
-        if target.role != 'police':
+        if actor.role != 'police':
             await msg.channel.send('>>> ㄱ조사 명령어는 경찰만 사용 가능합니다.')
             return
 
@@ -415,7 +417,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 밤에만 공격할 수 있습니다.')
             return
 
-        if target.role != 'mafia':
+        if actor.role != 'mafia':
             await msg.channel.send('>>> ㄱ공격 명령어는 마피아만 사용 가능합니다.')
             return
 
@@ -431,7 +433,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 밤에만 보호할 수 있습니다.')
             return
 
-        if target.role != 'doctor':
+        if actor.role != 'doctor':
             await msg.channel.send('>>> ㄱ보호 명령어는 의사만 사용 가능합니다.')
             return
 
