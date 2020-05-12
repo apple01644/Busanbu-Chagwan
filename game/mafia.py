@@ -325,7 +325,7 @@ class MafiaGame(GameInterface):
                 elif k == 9:
                     embed.description = '집 앞 도로에서 경골골절 및 장기부전으로 사망했습니다. '
                 else:
-                    embed.title = f'{target.nmae}님이 행방불명 됐습니다.'
+                    embed.title = f'{target.name}님이 행방불명 됐습니다.'
                 target.live = False
                 try:
                     await target.user.edit(reason='For mafia', mute=False, deafen=False)
