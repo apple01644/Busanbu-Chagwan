@@ -59,9 +59,10 @@ class MafiaGame(GameInterface):
         self.nick_to_id = {nick: k for k, nick in enumerate(self.users)}
 
         self.players[dices[0]].role = 'mafia'
-        await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
+
         if len(self.players) >= 6:
             self.players[dices[1]].role = 'mafia'
+            await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
             await self.send_message_for_mafia(self.players[dices[1]], '뭘 그렇게 보쇼? 나 마피아요')
         self.players[dices[2]].role = 'doctor'
         self.players[dices[3]].role = 'police'
