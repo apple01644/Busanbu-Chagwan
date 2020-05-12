@@ -74,20 +74,24 @@ class MafiaGame(GameInterface):
             self.players[dices[1]].role = self.mafia
             await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
             await self.send_message_for_mafia(self.players[dices[1]], '뭘 그렇게 보쇼? 나 마피아요')
-            if random.randint(0, 4) == 0:
-                self.players[dices[4]].role = self.shaman
-            elif random.randint(0, 3) == 0:
-                self.players[dices[4]].role = self.reporter
-                self.players[dices[4]].data[self.report_count] = 0
-            elif random.randint(0, 2) == 0:
-                self.players[dices[4]].role = self.politician
-                self.players[dices[4]].data['supporter_count'] = 0
-            elif random.randint(0, 1) == 0:
-                self.players[dices[4]].role = self.terrorist
-                self.players[dices[4]].data[self.terror_target] = -1
-            else:
-                self.players[dices[4]].role = self.leader
-                self.players[dices[4]].data[self.armor_count] = 1
+            special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader]
+            random.shuffle(special_role_list)
+            for k in range(len(self.players) - 5):
+                role = special_role_list[k]
+                if role == self.shaman:
+                    self.players[dices[4 + k]].role = role
+                elif role == self.reporter:
+                    self.players[dices[4 + k]].role = role
+                    self.players[dices[4 + k]].data[self.report_count] = 0
+                elif role == self.politician:
+                    self.players[dices[4 + k]].role = role
+                    self.players[dices[4 + k]].data['supporter_count'] = 0
+                elif role == self.terrorist:
+                    self.players[dices[4 + k]].role = role
+                    self.players[dices[4 + k]].data[self.terror_target] = -1
+                else:
+                    self.players[dices[4 + k]].role = self.leader
+                    self.players[dices[4 + k]].data[self.armor_count] = 1
 
         self.players[dices[2]].role = self.doctor
         self.players[dices[3]].role = 'police'
@@ -521,7 +525,7 @@ class MafiaGame(GameInterface):
         await self.send_message_for_everyone(actor, f'{target.name}에게 1표를 주었습니다.')
 
         if actor.role == self.politician:
-            for k in actor.data[self.supporter_count]:
+            for k in range(actor.data[self.supporter_count]):
                 self.chooses[f'pol_{k}'] = target.pk
                 await self.send_message_for_everyone(actor, f'{target.name}의 지지자가 1표를 주었습니다.')
 
