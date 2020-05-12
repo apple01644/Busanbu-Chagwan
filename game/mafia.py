@@ -135,7 +135,7 @@ class MafiaGame(GameInterface):
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
         elif self.is_game_finished() == 'mafia_win':
-            text = '>>> 마파이가 승리했습니다.'
+            text = '>>> 마피아가 승리했습니다.'
         else:
             text = '>>> 비정상적으로 종료 됐습니다.'
 
@@ -217,7 +217,7 @@ class MafiaGame(GameInterface):
             kill = True
 
             if 'doctor' in self.chooses:
-                if target.id == self.chooses['doctor']:
+                if target.pk == self.chooses['doctor']:
                     embed.title = f'의사가 {target.name}>(을)를 살려냈습니다.'
                     kill = False
             if kill:
@@ -297,7 +297,7 @@ class MafiaGame(GameInterface):
 
                 embed = discord.Embed()
                 embed.set_author(name=target.name, icon_url=target.user.avatar_url)
-                embed.title = f'<!@{target.user.id}>는 민주적 절차에 따라 사형되었습니다.'
+                embed.title = f'{target.name}는 민주적 절차에 따라 사형되었습니다.'
 
                 await self.broadcast(embed=embed)
                 await asyncio.sleep(1)
@@ -410,7 +410,7 @@ class MafiaGame(GameInterface):
         if target.role == 'mafia':
             await msg.channel.send('>>> 조사한 결과 그는 마피아입니다.')
         else:
-            await msg.channel.send('>>> 조사한 결과 그는 마파이가 아닙니다.')
+            await msg.channel.send('>>> 조사한 결과 그는 마피아가 아닙니다.')
 
     async def attack(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if self.mode != '밤':
