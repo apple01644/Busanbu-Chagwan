@@ -107,7 +107,8 @@ class MafiaGame(GameInterface):
             if not self.run:
                 break
             for player in self.players:
-                await player.user.edit(reason='For mafia', mute=False, deafen=False)
+                if player.live:
+                    await player.user.edit(reason='For mafia', mute=False, deafen=False)
             if self.is_game_finished() != '':
                 break
 
