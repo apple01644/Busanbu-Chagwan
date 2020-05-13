@@ -257,6 +257,8 @@ class MafiaGame(GameInterface):
             embed.title += f'{target.name}은 무당으로 밝혀졌습니다!!!'
         elif target.role == self.miner:
             embed.title += f'{target.name}은 도굴꾼으로 밝혀졌습니다!!!'
+        elif target.role == self.gambler:
+            embed.title += f'{target.name}은 승부사으로 밝혀졌습니다!!!'
         else:
             embed.title += f'{target.name}은 무직고졸백수로 밝혀졌습니다!!!'
         await self.broadcast(embed=embed)
@@ -935,7 +937,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 승부 중이 아닙니다.')
             return
 
-        if actor.pk in self.gamble_law:
+        if actor.pk not in self.gamble_law:
             await msg.channel.send('>>> 승부 대상이 아닙니다.')
             return
 
@@ -955,7 +957,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 승부 중이 아닙니다.')
             return
 
-        if actor.pk in self.gamble_law:
+        if actor.pk not in self.gamble_law:
             await msg.channel.send('>>> 승부 대상이 아닙니다.')
             return
 
@@ -975,7 +977,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 승부 중이 아닙니다.')
             return
 
-        if actor.pk in self.gamble_law:
+        if actor.pk not in self.gamble_law:
             await msg.channel.send('>>> 승부 대상이 아닙니다.')
             return
 
