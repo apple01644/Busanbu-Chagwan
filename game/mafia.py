@@ -163,6 +163,14 @@ class MafiaGame(GameInterface):
 
         await self.end_game()
 
+    async def gamble_delay(self, seconds: int):
+        for k in range(seconds * 10):
+            if (self.gamble_law[0] in self.gamble_chooses) and (self.gamble_law[1] in self.gamble_chooses):
+                break
+            if not self.run:
+                break
+            await asyncio.sleep(0.1)
+
     async def delay(self, seconds: int):
         if self.mode == '낮':
             for k in range(seconds * 10):
@@ -298,11 +306,17 @@ class MafiaGame(GameInterface):
             return ''
 
     def is_vote_finished(self):
-        for player in self.players:
-            if player.live:
-                if player.pk not in self.chooses:
-                    return False
-        return True
+        if self.is_active_boolean_chooses:
+            for player in self.players:
+                if player.live:
+                    if player.pk not in self.boolean_chooses:
+                        return False
+        else:
+            for player in self.players:
+                if player.live:
+                    if player.pk not in self.chooses:
+                        return False
+            return True
 
     async def broadcast(self, content=None, embed=None):
         for player in self.players:
@@ -887,7 +901,7 @@ class MafiaGame(GameInterface):
             self.gamble_chooses = {}
             self.busy = False
 
-            await self.delay(5)
+            await self.gamble_delay(5)
             await self.acquire_mutex()
             actor_lose = False
             target_lose = False
