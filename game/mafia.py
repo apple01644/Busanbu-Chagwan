@@ -63,6 +63,9 @@ class MafiaGame(GameInterface):
         self.run = True
         self.martial_law = False
 
+        for player in self.players:
+            await player.get_dm_channel()
+
         dices = [k for k in range(len(self.users))]
         random.shuffle(dices)
         self.players = [MafiaUser(pk=k, user=self.users[username], name=username) for k, username in
@@ -82,7 +85,6 @@ class MafiaGame(GameInterface):
                 self.players[dices[4 + k]].role = special_role_list[k]
 
         for player in self.players:
-            await player.get_dm_channel()
             embed = self.get_role_embed(player.role)
             embed.set_author(name=player.name, icon_url=player.user.avatar_url)
             await player.dm_channel.send(embed=embed)
