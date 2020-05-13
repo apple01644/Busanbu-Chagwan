@@ -17,7 +17,6 @@ class MafiaUser:
         self.dm_channel = None
         self.mute_by_pol = False
         self.report_count = 0
-        self.supporter_count = 0
         self.armor_count = 1
         self.give_life_count = 0
         self.embargo_count = 0
@@ -93,8 +92,8 @@ class MafiaGame(GameInterface):
                 pass
         self.busy = False
         self.mode = '밤'
-        await self.broadcast('>>> 60초 뒤 해가 뜹니다.')
-        await asyncio.sleep(30)
+        await self.broadcast('>>> 40초 뒤 해가 뜹니다.')
+        await asyncio.sleep(10)
         while self.run:
             await self.broadcast('>>> 30초 뒤 해가 뜹니다.')
             await self.delay_time_for_night(20)
@@ -127,7 +126,13 @@ class MafiaGame(GameInterface):
             await self.broadcast('>>> 30초 뒤 해가 저뭅니다.')
             await self.delay_time_for_day(20)
             await self.broadcast('>>> 10초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(10)
+            await self.delay_time_for_day(7)
+            await self.broadcast('>>> 3초 뒤 해가 저뭅니다.')
+            await self.delay_time_for_day(1)
+            await self.broadcast('>>> 2초 뒤 해가 저뭅니다.')
+            await self.delay_time_for_day(1)
+            await self.broadcast('>>> 1초 뒤 해가 저뭅니다.')
+            await self.delay_time_for_day(1)
             if not self.run:
                 break
             await self.night_begin()
@@ -183,17 +188,17 @@ class MafiaGame(GameInterface):
             embed.title = f'당신은 정치인입니다.'
             embed.description += '\n지지자: 정치인은 지지자덕분에 투표 할 때 1표를 더 가집니다.'
             embed.description += '\n불체포특권: 정치인은 투표로 죽지 않습니다.'
-            embed.description += '\nㄱ입막음: 해당하는 인물을 하루동안 낮에 입 막음을 합니다.(1회용)'
+            embed.description += '\nㄱ입막음: 해당하는 인물을 하루동안 낮에 입 막음을 합니다.(1회용/즉발)'
             embed.description += '\n당신의 정치인입니다. 다른 사람들이 당신의 뜻을 따르도록 하세요.'
         elif role == self.terrorist:
             embed.title = f'당신은 테러리스트입니다.'
             embed.description += '\n폭사 : 투표로 죽게되면 대상으로 정한 사람을 같이 죽입니다.'
-            embed.description += '\nㄱ목표설정 홍길동 : 이 명령어로 폭사할 때 죽일 사람을 정할 수 있습니다.'
+            embed.description += '\nㄱ목표설정 홍길동 : 이 명령어로 폭사할 때 죽일 사람을 정할 수 있습니다.(즉발)'
             embed.description += '\n당신의 테러리스트입니다. 당신의 능력으로 세상을 공포 속으로 빠트리세요.'
         elif role == self.leader:
             embed.title = f'당신은 장군입니다.'
-            embed.description += '\n방탄복: 마피아의 공격에 1회 버틸 수 있습니다.'
-            embed.description += '\nㄱ계엄렴 : 이 명령어로 낮에 투표를 비활성화 할 수 있습니다.(방탄복 비활성 시)'
+            embed.description += '\n방탄복: 마피아의 공격을 버틸 수 있습니다.(1회용)'
+            embed.description += '\nㄱ계엄렴 : 이 명령어로 낮에 투표를 활성화/비활성화 할 수 있습니다.(방탄복 비활성 시/즉발)'
             embed.description += '\n당신의 장군입니다. 시민들이 혼란에 빠지지 않도록 하세요.'
         elif role == self.shaman:
             embed.title = f'당신은 무당입니다.'
@@ -287,14 +292,6 @@ class MafiaGame(GameInterface):
         self.day += 1
         embed = discord.Embed()
         embed.description = ''
-        if self.shaman in self.chooses:
-            target = self.players[self.chooses[self.shaman]]
-            embed = discord.Embed()
-            embed.set_author(name=f'{target.name}', icon_url=target.user.avatar_url)
-            embed.title = '당신은 긴 잠에서 깨어났습니다.'
-            embed.description = '당신이 죽었다고 생각하였으나 그저 기분나쁜 꿈이였나 봅니다. 그러나 다른 생존자들은 아직 당신이 살았다는것을 모릅니다.'
-            target.live = True
-            await self.broadcast(embed=embed)
 
         if self.mafia in self.chooses:
             target = self.players[self.chooses[self.mafia]]
@@ -367,6 +364,19 @@ class MafiaGame(GameInterface):
                 embed.description += player.name
         await self.broadcast(embed=embed)
 
+        if self.shaman in self.chooses:
+            target = self.players[self.chooses[self.shaman]]
+            embed = discord.Embed()
+            embed.set_author(name=f'{target.name}', icon_url=target.user.avatar_url)
+            embed.title = '당신은 긴 잠에서 깨어났습니다.'
+            embed.description = '당신이 죽었다고 생각하였으나 그저 기분나쁜 꿈이였나 봅니다. 그러나 다른 생존자들은 아직 당신이 살았다는것을 모릅니다.'
+            target.live = True
+            await target.dm_channel.send(embed=embed)
+            try:
+                await target.user.edit(reason='For mafia', mute=False, deafen=False)
+            except discord.HTTPException as he:
+                pass
+
         self.chooses = {}
         self.busy = False
 
@@ -376,12 +386,6 @@ class MafiaGame(GameInterface):
         self.busy = True
         self.mode = '밤'
 
-        for player in self.players:
-            if player.role == self.shaman:
-                await self.send_message_for_afterlives(player, '무당이 죽은 혼들을 부르고 있습니다...')
-            elif player.mute_by_pol:
-                player.mute_by_pol = False
-
         votes = {}
         for vote in self.chooses.values():
             if vote not in votes:
@@ -390,7 +394,7 @@ class MafiaGame(GameInterface):
                 votes[vote] += 1
         votes = [[pk, value] for pk, value in sorted(votes.items(), key=lambda item: item[1])]
         if self.martial_law:
-            await self.broadcast(f'>>> 계엄령으로 인해 투표는 제대로 진행되지 않았습니다.')
+            await self.broadcast(f'>>> 계엄령으로 인해 투표는 무산 되었습니다.')
         elif len(votes) > 0:
             await self.broadcast(f'>>> 지금부터 투표결과를 알려드리겠습니다.')
             for pair in votes:
@@ -408,7 +412,8 @@ class MafiaGame(GameInterface):
                 await self.broadcast(f'>>> 최다득표자가 1명이 넘기 때문에 투표는 무효가 됩니다.')
             elif self.players[votes[-1][0]].role == self.politician:
                 await self.broadcast(
-                    f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조 현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다. 에 의하여 처벌이 불가합니다./')
+                    f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조'
+                    '"현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다." 에 의거하여 사형이 불가합니다./')
             else:
                 target = self.players[votes[-1][0]]
                 target.live = False
@@ -428,6 +433,7 @@ class MafiaGame(GameInterface):
                 elif target.role == self.terrorist:
                     await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
                     if target.terror_target != -1:
+                        await asyncio.sleep(1)
                         terror_target = self.players[target.terror_target]
                         if terror_target.live:
                             terror_target.live = False
@@ -446,8 +452,10 @@ class MafiaGame(GameInterface):
         self.chooses = {}
 
         for player in self.players:
-            if player.role == self.politician:
-                player.supporter_count += 1
+            if player.role == self.shaman:
+                await self.send_message_for_afterlives(player, '무당이 죽은 혼들을 부르고 있습니다...')
+            elif player.mute_by_pol:
+                player.mute_by_pol = False
 
         self.busy = False
 
@@ -661,6 +669,8 @@ class MafiaGame(GameInterface):
             embed.title += f'{target.name}은 장군으로 밝혀졌습니다!!!'
         elif target.role == self.shaman:
             embed.title += f'{target.name}은 무당으로 밝혀졌습니다!!!'
+        elif target.role == self.miner:
+            embed.title += f'{target.name}은 도굴꾼으로 밝혀졌습니다!!!'
         else:
             embed.title += f'{target.name}은 무직고졸백수로 밝혀졌습니다!!!'
         await self.broadcast(embed=embed)
@@ -736,11 +746,11 @@ class MafiaGame(GameInterface):
         actor.embargo_count += 1
         await msg.channel.send(f'>>> {target.name}는 입막음 당했습니다.')
         try:
-            await target.user.edit(reason='For mafia', mute=True, deafen=True)
+            await target.user.edit(reason='For mafia', mute=True, deafen=False)
         except discord.HTTPException as he:
             pass
 
-        await target.dm_channel.send(f'당신은 {actor.name}에 의해 입막음 당했습니다.')
+        await self.broadcast(f'당신은 {actor.name}에 의해 입막음 당했습니다.')
 
     async def end_game(self, channel: GameChannel = None, query: list = None, msg: discord.Message = None):
         while self.busy:
