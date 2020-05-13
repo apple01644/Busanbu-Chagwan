@@ -58,7 +58,8 @@ class MafiaGame(GameInterface):
         self.MAFIA_TYPE_A_COMMANDS = {'계엄령': self.toggle_martial_law, '찬성': self.add_yes_count, '반대': self.add_no_count}
         self.MAFIA_TYPE_B_COMMANDS = {'조사': self.search, '공격': self.attack, '투표': self.vote, '보호': self.heal,
                                       '특종작성': self.write_report, '목표설정': self.set_terror_target, '입막음': self.embargo,
-                                      '성불': self.give_life, '승부': self.begin_gamble}
+                                      '성불': self.give_life, '승부': self.begin_gamble, '보': self.gamble_paper,
+                                      '가위': self.gamble_scissor, '바위': self.gamble_rock}
         self.busy = False
         self.players = []
         self.nick_to_id = {}
