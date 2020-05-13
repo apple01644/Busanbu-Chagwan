@@ -741,7 +741,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> ㄱ목표설정 명령어는 테러리스트만 사용 가능합니다.')
             return
 
-        if actor.pk != target.pk:
+        if actor.pk == target.pk:
             await msg.channel.send('>>> 스스로를 인질로 삼을수 없습니다.')
             return
 
