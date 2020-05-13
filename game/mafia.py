@@ -213,7 +213,7 @@ class MafiaGame(GameInterface):
             embed.description += '\n당신의 도굴꾼입니다. 당신의 잠재적인 능력을 믿으세요.'
         return embed
 
-    def broadcast_report(self, actor: MafiaUser, target: MafiaUser):
+    async def broadcast_report(self, actor: MafiaUser, target: MafiaUser):
         embed = discord.Embed()
         embed.set_author(name=f'기자 {actor.name}', icon_url=actor.user.avatar_url)
         if random.randint(0, 2) == 0:
