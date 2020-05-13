@@ -22,6 +22,7 @@ class MafiaUser:
         self.embargo_count = 0
         self.terror_target = -1
         self.gamble_count = 0
+        self.spying_count = 0
 
     async def get_dm_channel(self):
         self.dm_channel = self.user.dm_channel
@@ -49,6 +50,7 @@ class MafiaGame(GameInterface):
     shaman = 'shaman'
     miner = 'miner'
     gambler = 'gambler'
+    spy = 'spy'
 
     def __init__(self):
         GameInterface.__init__(self)
@@ -57,10 +59,10 @@ class MafiaGame(GameInterface):
 
         self.MAFIA_TYPE_A_COMMANDS = {'계엄령': self.toggle_martial_law, '찬성': self.add_yes_count, '반대': self.add_no_count,
                                       '보': self.gamble_paper,
-                                      '가위': self.gamble_scissor, '바위': self.gamble_rock}
+                                      '가위': self.gamble_scissor, '바위': self.gamble_rock, '시간단축': self.shorten_time}
         self.MAFIA_TYPE_B_COMMANDS = {'조사': self.search, '공격': self.attack, '투표': self.vote, '보호': self.heal,
                                       '특종작성': self.write_report, '목표설정': self.set_terror_target, '입막음': self.embargo,
-                                      '성불': self.give_life, '승부': self.begin_gamble}
+                                      '성불': self.give_life, '승부': self.begin_gamble, '접선': self.spying}
         self.busy = False
         self.players = []
         self.nick_to_id = {}
@@ -73,6 +75,8 @@ class MafiaGame(GameInterface):
         self.martial_law = False
         self.gamble_law = None
         self.gamble_chooses = {}
+        self.shorted_time = 0
+        self.shorted_list = []
 
     async def start(self):
         await self.acquire_mutex()
@@ -89,18 +93,24 @@ class MafiaGame(GameInterface):
         for player in self.players:
             await player.get_dm_channel()
 
+        special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader, self.miner,
+                             self.gambler]
+        random.shuffle(special_role_list)
+
         self.players[dices[0]].role = self.mafia
         self.players[dices[1]].role = self.doctor
-        self.players[dices[2]].role = 'police'
+        self.players[dices[2]].role = self.police
+        self.players[dices[3]].role = special_role_list[0]
+        if len(self.players) >= 4:
+            self.players[dices[4]].role = self.mafia
+            await self.send_message_for_mafia_team(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
+            await self.send_message_for_mafia_team(self.players[dices[4]], '뭘 그렇게 보쇼? 나 마피아요')
         if len(self.players) >= 6:
-            self.players[dices[3]].role = self.mafia
-            await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
-            await self.send_message_for_mafia(self.players[dices[3]], '뭘 그렇게 보쇼? 나 마피아요')
-            special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader, self.miner,
-                                 self.gambler]
-            random.shuffle(special_role_list)
-            for k in range(len(self.players) - 4):
-                self.players[dices[4 + k]].role = special_role_list[k]
+            self.players[dices[6]].role = self.spy
+            await self.send_message_for_mafia_team(self.players[dices[6]], '그렇지 않아도 기다렸소. 나 스파이요')
+
+        if len(self.players) >= 7:
+            self.players[dices[7]].role = special_role_list[1]
 
         for player in self.players:
             embed = self.get_role_embed(player.role)
@@ -113,16 +123,7 @@ class MafiaGame(GameInterface):
         await self.broadcast('>>> 40초 뒤 해가 뜹니다.')
         await self.delay(10)
         while self.run:
-            await self.broadcast('>>> 30초 뒤 해가 뜹니다.')
-            await self.delay(20)
-            await self.broadcast('>>> 10초 뒤 해가 뜹니다.')
-            await self.delay(7)
-            await self.broadcast('>>> 3초 뒤 해가 뜹니다.')
-            await self.delay(1)
-            await self.broadcast('>>> 2초 뒤 해가 뜹니다.')
-            await self.delay(1)
-            await self.broadcast('>>> 1초 뒤 해가 뜹니다.')
-            await self.delay(1)
+            await self.delay(30, notes=[30, 10, 3, 2, 1])
             if not self.run:
                 break
             await self.day_begin()
@@ -136,18 +137,7 @@ class MafiaGame(GameInterface):
             if self.is_game_finished() != '':
                 break
 
-            await self.broadcast('>>> 60초 뒤 해가 저뭅니다.')
-            await self.delay(30)
-            await self.broadcast('>>> 30초 뒤 해가 저뭅니다.')
-            await self.delay(20)
-            await self.broadcast('>>> 10초 뒤 해가 저뭅니다.')
-            await self.delay(7)
-            await self.broadcast('>>> 3초 뒤 해가 저뭅니다.')
-            await self.delay(1)
-            await self.broadcast('>>> 2초 뒤 해가 저뭅니다.')
-            await self.delay(1)
-            await self.broadcast('>>> 1초 뒤 해가 저뭅니다.')
-            await self.delay(1)
+            await self.delay(60, notes=[60, 30, 10, 3, 2, 1])
             if not self.run:
                 break
             await self.night_begin()
@@ -171,13 +161,22 @@ class MafiaGame(GameInterface):
                 break
             await asyncio.sleep(0.1)
 
-    async def delay(self, seconds: int):
+    async def delay(self, seconds: int, notes: list = None):
         if self.mode == '낮':
             for k in range(seconds * 10):
                 while self.gamble_law is not None:
                     await asyncio.sleep(0.1)
+                if seconds - self.shorted_time - k / 10 <= 0:
+                    self.shorted_time = - (seconds - self.shorted_time - k / 10)
+                    break
                 if self.is_vote_finished() or (not self.run):
                     break
+                if notes is not None:
+                    if notes[0] >= seconds - k / 10 - self.shorted_time:
+                        await self.broadcast(f'>>> 다음 단계까지 {notes[0]}초 남았습니다.')
+                        del notes[0]
+                        if len(notes) == 0:
+                            notes = None
                 await asyncio.sleep(0.1)
         else:
             for k in range(seconds * 10):
@@ -189,6 +188,7 @@ class MafiaGame(GameInterface):
         embed = discord.Embed()
         embed.title = f'당신은 시민입니다.'
         embed.description = 'ㄱ투표 홍길동 : 이 명령어로 낮에 죽일 사람을 결정할 수 있습니다.'
+        embed.description += 'ㄱ시간단축 : 이 명령어로 낮에 투표시간을 단축할 수 있습니다.'
 
         if role == self.doctor:
             embed.title = f'당신은 의사입니다.'
@@ -196,11 +196,11 @@ class MafiaGame(GameInterface):
             embed.description += '\n당신은 의사입니다. 경찰/시민과 협력해서 시민팀을 승리로 이끄세요.'
         elif role == self.mafia:
             embed.title = f'당신은 마피아입니다.'
-            embed.description += '\nㄱ공격 홍길동 : 이 명령어로 마피아들은 매일 밤 마다 죽일 사람을 1명 결정할 수 있습니다.'
+            embed.description += '\nㄱ공격 홍길동 : 이 명령어로 마피아팀은 매일 밤 마다 죽일 사람을 1명 결정할 수 있습니다.(1일차 부터 가능)'
             embed.description += '\n당신은 마피아입니다. 시민들을 기망하고 경찰/의사를 사칭하여 마피아팀을 승리로 이끄세요.'
         elif role == 'police':
             embed.title = f'당신은 경찰입니다.'
-            embed.description += '\nㄱ조사 홍길동 : 이 명령어로 매일 밤 마다 사람을 조사할 수 있습니다.(즉발)'
+            embed.description += '\nㄱ조사 홍길동 : 이 명령어로 매일 밤 마다 사람을 조사하여 마피아팀 소속 여부를 알 수 있습니다.(즉발)'
             embed.description += '\n당신은 경찰입니다. 진실을 알리고 마피아를 찾아내 시민팀을 승리로 이끄세요.'
         elif role == self.reporter:
             embed.title = f'당신은 기자입니다.'
@@ -235,9 +235,14 @@ class MafiaGame(GameInterface):
             embed.title = f'당신은 승부사입니다.'
             embed.description += '\nㄱ승부: 낮에 다른 사람에게 승부를 겁니다. 승부에서 패배한 쪽은 즉사합니다.(하루 1번)'
             embed.description += '\n당신은 승부사입니다. 가장 위험한 도전을 하여 가장 달콤한 승리를 쟁취하세요.'
+        elif role == self.spy:
+            embed.title = f'당신은 스파이입니다.'
+            embed.description += '\nㄱ접선: 매일 밤에 다른 사람의 직업을 알아낼 수 있습니다.(하루 1번)'
+            embed.description += '\nㄱ공격 홍길동 : 이 명령어로 마피아팀은 매일 밤 마다 죽일 사람을 1명 결정할 수 있습니다.(1일차 부터 가능)'
+            embed.description += '\n당신은 스파이 입니다. 시민들의 전력을 확인하여 마피아팀을 승리로 이끄세요.'
         return embed
 
-    async def broadcast_report(self, actor: MafiaUser, target: MafiaUser):
+    def get_report(self, actor: MafiaUser, target: MafiaUser):
         embed = discord.Embed()
         embed.set_author(name=f'기자 {actor.name}', icon_url=actor.user.avatar_url)
         if random.randint(0, 2) == 0:
@@ -267,9 +272,15 @@ class MafiaGame(GameInterface):
             embed.title += f'{target.name}은 도굴꾼으로 밝혀졌습니다!!!'
         elif target.role == self.gambler:
             embed.title += f'{target.name}은 승부사으로 밝혀졌습니다!!!'
+        elif target.role == self.spy:
+            embed.title += f'{target.name}은 스파이로 밝혀졌습니다!!!'
         else:
-            embed.title += f'{target.name}은 무직고졸백수로 밝혀졌습니다!!!'
-        await self.broadcast(embed=embed)
+            citizen_texts = [
+                '무직고졸백수', '엄준식으', '15년차 실업인으', '미드유미장인으', '장례식국밥도둑으'
+            ]
+            random.shuffle(citizen_texts)
+            embed.title += f'{target.name}은 {citizen_texts[0]}로 밝혀졌습니다!!!'
+        return embed
 
     async def daily_alarm(self):
         embed = discord.Embed()
@@ -290,17 +301,17 @@ class MafiaGame(GameInterface):
         self.busy = True
 
     def is_game_finished(self):
-        mafia_count = 0
+        mafia_team_count = 0
         citizen_count = 0
         for player in self.players:
             if player.live:
-                if player.role == self.mafia:
-                    mafia_count += 1
+                if player.role == self.mafia or player.role == self.spy:
+                    mafia_team_count += 1
                 else:
                     citizen_count += 1
-        if mafia_count == 0:
+        if mafia_team_count == 0:
             return 'citizen_win'
-        elif citizen_count == mafia_count:
+        elif citizen_count == mafia_team_count:
             return 'mafia_win'
         else:
             return ''
@@ -322,6 +333,11 @@ class MafiaGame(GameInterface):
         for player in self.players:
             await player.dm_channel.send(content=content, embed=embed)
 
+    async def broadcast_for_mafia_team(self, content=None, embed=None):
+        for player in self.players:
+            if player.live and (player.role == self.mafia or player.role == self.spy):
+                await player.dm_channel.send(content=content, embed=embed)
+
     async def send_message_for_everyone(self, target: MafiaUser, content: str):
         embed = discord.Embed()
         embed.set_author(name=target.name, icon_url=target.user.avatar_url)
@@ -330,13 +346,13 @@ class MafiaGame(GameInterface):
             if player.pk != target.pk:
                 await player.dm_channel.send(embed=embed)
 
-    async def send_message_for_mafia(self, target: MafiaUser, content: str):
+    async def send_message_for_mafia_team(self, target: MafiaUser, content: str):
         embed = discord.Embed()
         embed.set_author(name=target.name, icon_url=target.user.avatar_url)
         embed.description = content
         for player in self.players:
             if player.pk != target.pk:
-                if player.live and player.role == self.mafia:
+                if player.live and (player.role == self.mafia or player.role == self.spy):
                     await player.dm_channel.send(embed=embed)
 
     async def send_message_for_afterlives(self, target: MafiaUser, content: str):
@@ -358,6 +374,8 @@ class MafiaGame(GameInterface):
         await self.acquire_mutex()
         self.mode = '낮'
         self.day += 1
+        self.shorted_time = 0
+        self.shorted_list = []
         embed = discord.Embed()
         embed.description = ''
 
@@ -386,7 +404,7 @@ class MafiaGame(GameInterface):
                         await self.broadcast(embed=martial_law_embed)
 
                 embed.title = f'{target.name}님이 사망했습니다.\n'
-                k = random.randint(0, 10)
+                k = random.randint(0, 11)
                 if k == 0:
                     embed.description = '침실에서 납탄이 머리를 관통한 상태로 발견 됐습니다.'
                 elif k == 1:
@@ -407,6 +425,8 @@ class MafiaGame(GameInterface):
                     embed.description = '폭파된 자택에서 발견 되었습니다. 유골은 찾지 못 했습니다.'
                 elif k == 9:
                     embed.description = '집 앞 도로에서 경골골절 및 장기부전으로 사망했습니다. '
+                elif k == 10:
+                    embed.description = '소파에서 허리가 끊어진 채로 발견되었습니다. 컴퓨터엔 "범인은 엄준식"이라는 다잉메시지가 있었습니다.'
                 else:
                     embed.title = f'{target.name}님이 행방불명 됐습니다.'
                 target.live = False
@@ -414,13 +434,15 @@ class MafiaGame(GameInterface):
 
                 for player in self.players:
                     if player.role == self.miner:
-                        if self.day == 1:
+                        if self.day == 2:
                             player.role = target.role
                             miner_embed = self.get_role_embed(player.role)
                             miner_embed.set_author(name=player.name, icon_url=player.user.avatar_url)
                             await player.dm_channel.send(embed=miner_embed)
                     elif player.role == self.gambler:
                         player.gamble_count = 0
+                    elif player.role == self.spy:
+                        player.spying_count = 0
         else:
             embed.title = '낮이 밝았습니다. 아무일도 일어나지 않았습니다.'
         embed.description += '\n생존자들: '
@@ -451,7 +473,8 @@ class MafiaGame(GameInterface):
             actor.report_count += 1
 
             target = self.players[self.chooses[self.reporter][1]]
-            await self.broadcast_report(actor, target)
+            report = self.get_report(actor, target)
+            await self.broadcast(embed=report)
 
         self.chooses = {}
         self.busy = False
@@ -471,75 +494,75 @@ class MafiaGame(GameInterface):
             await self.broadcast(f'>>> 지금부터 투표결과를 알려드리겠습니다.')
             for pair in votes:
                 await asyncio.sleep(1)
-                await self.broadcast(f'>>> {self.players[pair[0]].name}')
+                text = f'>>> {self.players[pair[0]].name}'
+                if not self.players[pair[0]].live:
+                    text = f'>>> 故 {self.players[pair[0]].name}'
+                await self.broadcast(text)
                 await asyncio.sleep(1)
                 await self.broadcast(f'>>> **{pair[1]}표**')
                 await asyncio.sleep(1)
 
-            is_draw = False
-            if len(votes) > 1:
-                if votes[-1][1] == votes[-2][1]:
-                    is_draw = True
-            if is_draw:
-                await self.broadcast(f'>>> 최다득표자가 1명이 넘습니다.')
-            elif self.players[votes[-1][0]].role == self.politician:
-                await self.broadcast(
-                    f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조'
-                    '"현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다." 에 의거하여 사형이 불가합니다./')
+            votes = [pair for pair in votes if self.players[pair[0]].live]
+            if len(votes) == 0:
+                await self.broadcast(f'>>> 사형 가능한 득표자가 없기 때문에 투표는 종료 됩니다.')
             else:
-                target = self.players[votes[-1][0]]
-                self.boolean_chooses = {}
-                self.is_active_boolean_chooses = True
-                await self.broadcast(f'>>> {target.name}를 사형 할 것입니까?\nㄱ찬성 or ㄱ반대')
-                self.busy = False
-                await self.broadcast(f'>>> 20초 후 찬성/반대 투표가 끝납니다.')
-                await self.delay(10)
-                await self.broadcast(f'>>> 10초 후 찬성/반대 투표가 끝납니다.')
-                await self.delay(7)
-                await self.broadcast(f'>>> 3초 후 찬성/반대 투표가 끝납니다.')
-                await self.delay(1)
-                await self.broadcast(f'>>> 2초 후 찬성/반대 투표가 끝납니다.')
-                await self.delay(1)
-                await self.broadcast(f'>>> 1초 후 찬성/반대 투표가 끝납니다.')
-                await self.delay(1)
+                is_draw = False
+                if len(votes) > 1:
+                    if votes[-1][1] == votes[-2][1]:
+                        is_draw = True
+                if is_draw:
+                    await self.broadcast(f'>>> 최다득표자가 1명이 넘습니다.')
+                elif self.players[votes[-1][0]].role == self.politician:
+                    await self.broadcast(
+                        f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조'
+                        '"현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다." 에 의거하여 사형이 불가합니다./')
+                else:
+                    target = self.players[votes[-1][0]]
+                    self.boolean_chooses = {}
+                    self.is_active_boolean_chooses = True
+                    await self.broadcast(f'>>> {target.name}를 사형 할 것입니까?\nㄱ찬성 or ㄱ반대')
+                    self.busy = False
+                    await self.delay(20, notes=[20, 10, 3, 2, 1])
 
-                await self.acquire_mutex()
-                self.is_active_boolean_chooses = False
-                yes_count = 0
-                no_count = 0
-                for boolean in self.boolean_chooses.values():
-                    if boolean:
-                        yes_count += 1
-                    else:
-                        no_count += 1
+                    await self.acquire_mutex()
+                    self.is_active_boolean_chooses = False
+                    yes_count = 0
+                    no_count = 0
+                    for boolean in self.boolean_chooses.values():
+                        if boolean:
+                            yes_count += 1
+                        else:
+                            no_count += 1
+                    if target.live:
+                        await self.broadcast(f'>>> 개표 결과 찬성 {yes_count}표, 반대 {no_count}표 입니다.')
+                        if yes_count > no_count:
+                            target.live = False
+                            await target.permission_edit(mute=False, deafen=False)
 
-                await self.broadcast(f'>>> 개표 결과 찬성 {yes_count}표, 반대 {no_count}표 입니다.')
-                if yes_count > no_count:
-                    target.live = False
-                    await target.permission_edit(mute=False, deafen=False)
+                            embed = discord.Embed()
+                            embed.set_author(name=target.name, icon_url=target.user.avatar_url)
+                            embed.title = f'{target.name}는 민주적 절차에 따라 사형되었습니다.'
 
-                    embed = discord.Embed()
-                    embed.set_author(name=target.name, icon_url=target.user.avatar_url)
-                    embed.title = f'{target.name}는 민주적 절차에 따라 사형되었습니다.'
-
-                    await self.broadcast(embed=embed)
-                    await asyncio.sleep(1)
-                    if target.role == self.mafia:
-                        await self.broadcast('>>> 그는 마피아로 밝혀졌습니다.')
-                    elif target.role == self.terrorist:
-                        await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
-                        if target.terror_target != -1:
+                            await self.broadcast(embed=embed)
                             await asyncio.sleep(1)
-                            terror_target = self.players[target.terror_target]
-                            if terror_target.live:
-                                terror_target.live = False
-                                await self.broadcast(f'>>> {terror_target.name}가 집에 들어가는 순간 폭발과 함께 사라졌습니다.')
-                                await terror_target.permission_edit(mute=False, deafen=False)
+                            if target.role == self.mafia or target.role == self.spy:
+                                await self.broadcast('>>> 그는 마피아팀으로 밝혀졌습니다.')
+                            elif target.role == self.terrorist:
+                                await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
+                                if target.terror_target != -1:
+                                    await asyncio.sleep(1)
+                                    terror_target = self.players[target.terror_target]
+                                    if terror_target.live:
+                                        terror_target.live = False
+                                        await self.broadcast(f'>>> {terror_target.name}가 집에 들어가는 순간 폭발과 함께 사라졌습니다.')
+                                        await terror_target.permission_edit(mute=False, deafen=False)
 
+                                    else:
+                                        await self.broadcast(f'>>> {terror_target.name}의 집에서 폭발음이 들었습니다.')
                             else:
-                                await self.broadcast(f'>>> {terror_target.name}의 집에서 폭발음이 들었습니다.')
+                                await self.broadcast('>>> 그는 선량한 시민으로 밝혀졌습니다.')
                     else:
-                        await self.broadcast('>>> 그는 선량한 시민으로 밝혀졌습니다.')
+                        await self.broadcast(f'>>> 사형 대상이 이미 숨졌기 때문에 투표는 종료 됩니다.')
         await asyncio.sleep(1)
         await self.broadcast('>>> ...해가 저뭅니다')
         await self.daily_alarm()
@@ -598,8 +621,8 @@ class MafiaGame(GameInterface):
                 if actor.live and self.mode == '낮' and (not actor.mute_by_pol):
                     await self.send_message_for_everyone(actor, msg.content)
                 elif self.mode == '밤':
-                    if actor.live and actor.role == self.mafia:
-                        await self.send_message_for_mafia(actor, msg.content)
+                    if actor.live and (actor.role == self.mafia or actor.role == self.spy):
+                        await self.send_message_for_mafia_team(actor, msg.content)
                     elif (not actor.live) or actor.role == self.shaman:
                         await self.send_message_for_afterlives(actor, msg.content)
             break
@@ -662,10 +685,10 @@ class MafiaGame(GameInterface):
             return
 
         self.chooses[self.police] = target.pk
-        if target.role == self.mafia:
-            await msg.channel.send('>>> 조사한 결과 그는 마피아입니다.')
+        if target.role == self.mafia or target.role == self.spy:
+            await msg.channel.send('>>> 조사한 결과 그는 마피아팀입니다.')
         else:
-            await msg.channel.send('>>> 조사한 결과 그는 마피아가 아닙니다.')
+            await msg.channel.send('>>> 조사한 결과 그는 마피아팀이 아닙니다.')
 
     async def attack(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if not actor.live:
@@ -676,7 +699,11 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 밤에만 공격할 수 있습니다.')
             return
 
-        if actor.role != self.mafia:
+        if self.day == 0:
+            await msg.channel.send('>>> 0일차 밤에는 공격할 수 없습니다.')
+            return
+
+        if actor.role != self.mafia and actor.role != self.spy:
             await msg.channel.send('>>> ㄱ공격 명령어는 마피아만 사용 가능합니다.')
             return
 
@@ -688,7 +715,7 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> 죽은 사람을 공격 대상으로 삼을 수 없습니다.')
             return
 
-        await self.send_message_for_mafia(actor, f'{target.name}를 공격 대상으로 삼았습니다.')
+        await self.send_message_for_mafia_team(actor, f'{target.name}를 공격 대상으로 삼았습니다.')
 
         self.chooses[self.mafia] = target.pk
         await msg.add_reaction(emoji='👌')
@@ -1002,6 +1029,49 @@ class MafiaGame(GameInterface):
         self.gamble_chooses[actor.pk] = 'P'
         await msg.add_reaction(emoji='👌')
 
+    async def shorten_time(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.mode != '낮':
+            await msg.channel.send('>>> 밤에는 시간단축을 사용할 수 없습니다.')
+            return
+
+        if actor.pk in self.shorted_list:
+            await msg.channel.send('>>> 이미 시간단축을 사용했습니다.')
+            return
+
+        self.shorted_list.append(actor.pk)
+        self.shorted_time += 4
+        await msg.add_reaction(emoji='👌')
+
+    async def spying(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.mode != '밤':
+            await msg.channel.send('>>> 낮에는 접선을 사용할 수 없습니다.')
+            return
+
+        if actor.pk == target.pk:
+            await msg.channel.send('>>> 자기 자신에겐 접선을 할 수 없습니다.')
+            return
+
+        if actor.spying_count > 0:
+            await msg.channel.send('>>> 하루에 한 번만 접선를 할 수 없습니다.')
+            return
+
+        if target.role == self.mafia:
+            await msg.channel.send('>>> 마피아에겐 접선을 할 수 없습니다.')
+            return
+
+        actor.spying_count += 1
+
+        report = self.get_report(actor, target)
+        await self.broadcast_for_mafia_team(embed=report)
+
     async def end_game(self, channel: GameChannel = None, query: list = None, msg: discord.Message = None):
         await self.acquire_mutex()
         repr(query)
@@ -1017,7 +1087,7 @@ class MafiaGame(GameInterface):
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
         elif self.is_game_finished() == 'mafia_win':
-            text = '>>> 마피아가 승리했습니다.'
+            text = '>>> 마피아팀이 승리했습니다.'
         else:
             text = '>>> 비정상적으로 종료 됐습니다.'
 
