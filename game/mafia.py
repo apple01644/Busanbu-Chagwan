@@ -173,44 +173,44 @@ class MafiaGame(GameInterface):
         if role == self.doctor:
             embed.title = f'당신은 의사입니다.'
             embed.description += '\nㄱ보호 홍길동 : 이 명령어로 매일 밤 마다 마피아로부터 지킬 사람을 결정할 수 있습니다.'
-            embed.description += '\n당신의 의사입니다. 경찰/시민과 협력해서 시민팀을 승리로 이끄세요.'
+            embed.description += '\n당신은 의사입니다. 경찰/시민과 협력해서 시민팀을 승리로 이끄세요.'
         elif role == self.mafia:
             embed.title = f'당신은 마피아입니다.'
             embed.description += '\nㄱ공격 홍길동 : 이 명령어로 마피아들은 매일 밤 마다 죽일 사람을 1명 결정할 수 있습니다.'
-            embed.description += '\n당신의 마피아입니다. 시민들을 기망하고 경찰/의사를 사칭하여 마피아팀을 승리로 이끄세요.'
+            embed.description += '\n당신은 마피아입니다. 시민들을 기망하고 경찰/의사를 사칭하여 마피아팀을 승리로 이끄세요.'
         elif role == 'police':
             embed.title = f'당신은 경찰입니다.'
             embed.description += '\nㄱ조사 홍길동 : 이 명령어로 매일 밤 마다 사람을 조사할 수 있습니다.(즉발)'
-            embed.description += '\n당신의 경찰입니다. 진실을 알리고 마피아를 찾아내 시민팀을 승리로 이끄세요.'
+            embed.description += '\n당신은 경찰입니다. 진실을 알리고 마피아를 찾아내 시민팀을 승리로 이끄세요.'
         elif role == self.reporter:
             embed.title = f'당신은 기자입니다.'
             embed.description += '\nㄱ특종 홍길동 : 이 명령어로 밤에 특종 작성하여 다음날 그 사람을 직업을 공표 할 수 있습니다.(1회용)'
-            embed.description += '\n당신의 기자입니다. 주목받는 특종을 내십시요.'
+            embed.description += '\n당신은 기자입니다. 주목받는 특종을 내십시요.'
         elif role == self.politician:
             embed.title = f'당신은 정치인입니다.'
             embed.description += '\n지지자: 정치인은 지지자덕분에 투표 할 때 1표를 더 가집니다.'
             embed.description += '\n불체포특권: 정치인은 투표로 죽지 않습니다.'
             embed.description += '\nㄱ입막음: 해당하는 인물을 하루동안 낮에 입 막음을 합니다.(1회용/즉발)'
-            embed.description += '\n당신의 정치인입니다. 다른 사람들이 당신의 뜻을 따르도록 하세요.'
+            embed.description += '\n당신은 정치인입니다. 다른 사람들이 당신은 뜻을 따르도록 하세요.'
         elif role == self.terrorist:
             embed.title = f'당신은 테러리스트입니다.'
             embed.description += '\n폭사 : 투표로 죽게되면 대상으로 정한 사람을 같이 죽입니다.'
             embed.description += '\nㄱ목표설정 홍길동 : 이 명령어로 폭사할 때 죽일 사람을 정할 수 있습니다.(즉발)'
-            embed.description += '\n당신의 테러리스트입니다. 당신의 능력으로 세상을 공포 속으로 빠트리세요.'
+            embed.description += '\n당신은 테러리스트입니다. 당신은 능력으로 세상을 공포 속으로 빠트리세요.'
         elif role == self.leader:
             embed.title = f'당신은 장군입니다.'
             embed.description += '\n방탄복: 마피아의 공격을 버틸 수 있습니다.(1회용)'
             embed.description += '\nㄱ계엄렴 : 이 명령어로 낮에 투표를 활성화/비활성화 할 수 있습니다.(방탄복 비활성 시/즉발)'
-            embed.description += '\n당신의 장군입니다. 시민들이 혼란에 빠지지 않도록 하세요.'
+            embed.description += '\n당신은 장군입니다. 시민들이 혼란에 빠지지 않도록 하세요.'
         elif role == self.shaman:
             embed.title = f'당신은 무당입니다.'
             embed.description += '\n신내림: 밤에 죽은 혼들을 불러 대화할 수 있습니다.'
             embed.description += '\nㄱ성불: 이 명령어로 밤에 부활 시킬사람을 결정합니다.(즉발/1회용)'
-            embed.description += '\n당신의 무당입니다. 억울하게 죽은 사람들의 원한을 풀어주세요.'
+            embed.description += '\n당신은 무당입니다. 억울하게 죽은 사람들의 원한을 풀어주세요.'
         elif role == self.miner:
             embed.title = f'당신은 도굴꾼입니다.'
             embed.description += '\n도굴: 첫날 밤에 죽은 사람의 직업을 얻습니다.'
-            embed.description += '\n당신의 도굴꾼입니다. 당신의 잠재적인 능력을 믿으세요.'
+            embed.description += '\n당신은 도굴꾼입니다. 당신의 잠재적인 능력을 믿으세요.'
         return embed
 
     async def broadcast_report(self, actor: MafiaUser, target: MafiaUser):
@@ -733,6 +733,7 @@ class MafiaGame(GameInterface):
 
         if target.live:
             await msg.channel.send('>>> 생존자에게는 성불을 사용할 수 없습니다.')
+            return
 
         self.chooses[self.shaman] = [actor.pk, target.pk]
         await msg.channel.send(f'>>> {target.name}에게 생명을 부여했습니다. 그는 다음날 기적처럼 돌아올것 입니다.')
