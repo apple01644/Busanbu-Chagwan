@@ -118,6 +118,8 @@ class DiscordBot:
 
         if isinstance(msg.channel, discord.DMChannel):
             await CommandBinding.run_listener(self, msg)
+        elif len(msg.content) == 0:
+            pass
         else:
             if msg.content[0] != 'ㄱ':
                 return
