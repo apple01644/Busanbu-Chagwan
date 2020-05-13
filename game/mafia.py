@@ -385,6 +385,7 @@ class MafiaGame(GameInterface):
                             player.role = target.role
                             miner_embed = self.get_role_embed(player.role)
                             miner_embed.set_author(name=player.name, icon_url=player.user.avatar_url)
+                            await player.dm_channel.send(embed=miner_embed)
         else:
             embed.title = '낮이 밝았습니다. 아무일도 일어나지 않았습니다.'
         embed.description += '\n생존자들: '
