@@ -563,7 +563,7 @@ class MafiaGame(GameInterface):
             if matched:
                 break
             for command in self.MAFIA_TYPE_B_COMMANDS:
-                if msg.content.strip() == f'ㄱ{command} ':
+                if msg.content.find(f'ㄱ{command} ') == 0:
                     query = msg.content[len(command) + 2:].strip()
                     if query not in self.nick_to_id:
                         self.busy = False
