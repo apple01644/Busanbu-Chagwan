@@ -831,6 +831,7 @@ class MafiaGame(GameInterface):
 
         self.boolean_chooses[actor.pk] = True
         await msg.add_reaction(emoji='👌')
+        await self.send_message_for_everyone(actor, f'{actor.name}(은)는 사형을 찬성합니다.')
 
     async def add_no_count(self, actor: MafiaUser, msg: discord.Message):
         if not actor.live:
@@ -847,6 +848,7 @@ class MafiaGame(GameInterface):
 
         self.boolean_chooses[actor.pk] = False
         await msg.add_reaction(emoji='👌')
+        await self.send_message_for_everyone(actor, f'{actor.name}(은)는 사형을 반대합니다.')
 
     async def begin_gamble(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if not actor.live:
