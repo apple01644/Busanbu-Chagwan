@@ -63,14 +63,15 @@ class MafiaGame(GameInterface):
         self.run = True
         self.martial_law = False
 
-        for player in self.players:
-            await player.get_dm_channel()
 
         dices = [k for k in range(len(self.users))]
         random.shuffle(dices)
         self.players = [MafiaUser(pk=k, user=self.users[username], name=username) for k, username in
                         enumerate(self.users)]
         self.nick_to_id = {nick: k for k, nick in enumerate(self.users)}
+
+        for player in self.players:
+            await player.get_dm_channel()
 
         self.players[dices[0]].role = self.mafia
         self.players[dices[1]].role = self.doctor
