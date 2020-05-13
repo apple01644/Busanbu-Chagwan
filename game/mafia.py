@@ -78,7 +78,7 @@ class MafiaGame(GameInterface):
         if len(self.players) >= 6:
             self.players[dices[3]].role = self.mafia
             await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
-            await self.send_message_for_mafia(self.players[dices[1]], '뭘 그렇게 보쇼? 나 마피아요')
+            await self.send_message_for_mafia(self.players[dices[3]], '뭘 그렇게 보쇼? 나 마피아요')
             special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader, self.miner]
             random.shuffle(special_role_list)
             for k in range(len(self.players) - 4):
@@ -694,7 +694,7 @@ class MafiaGame(GameInterface):
             return
 
         actor.terror_target = target.pk
-        await actor.dm_channel.send('>>> 테러리스트가 당신을 인질로 설정했습니다.')
+        await target.dm_channel.send('>>> 테러리스트가 당신을 인질로 설정했습니다.')
         await msg.add_reaction(emoji='👌')
 
     async def toggle_martial_law(self, channel: GameChannel, actor: MafiaUser, msg: discord.Message):
