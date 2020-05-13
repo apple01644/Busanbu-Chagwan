@@ -821,7 +821,7 @@ class MafiaGame(GameInterface):
             await msg.add_reaction(emoji='💀')
             return
 
-        if self.is_active_boolean_chooses:
+        if not self.is_active_boolean_chooses:
             await msg.channel.send('>>> 찬성/반대 투표 기간이 아닙니다.')
             return
 
