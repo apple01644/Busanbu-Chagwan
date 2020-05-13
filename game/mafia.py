@@ -601,6 +601,7 @@ class MafiaGame(GameInterface):
 
         if self.martial_law:
             await self.broadcast(f'>>> 계엄령으로 인해 투표를 진행할 수 없습니다.')
+            return
 
         if actor.pk in self.chooses:
             await msg.channel.send('>>> 이미 투표했습니다.')
