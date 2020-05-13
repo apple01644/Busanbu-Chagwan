@@ -217,7 +217,7 @@ class MafiaGame(GameInterface):
         elif role == self.shaman:
             embed.title = f'당신은 무당입니다.'
             embed.description += '\n신내림: 밤에 죽은 혼들을 불러 대화할 수 있습니다.'
-            embed.description += '\nㄱ성불: 이 명령어로 밤에 부활 시킬사람을 결정합니다.(즉발/1회용)'
+            embed.description += '\nㄱ성불: 이 명령어로 밤에 부활 시킬사람을 결정합니다.(1회용)'
             embed.description += '\n당신은 무당입니다. 억울하게 죽은 사람들의 원한을 풀어주세요.'
         elif role == self.miner:
             embed.title = f'당신은 도굴꾼입니다.'
@@ -836,7 +836,7 @@ class MafiaGame(GameInterface):
             await msg.add_reaction(emoji='💀')
             return
 
-        if self.is_active_boolean_chooses:
+        if not self.is_active_boolean_chooses:
             await msg.channel.send('>>> 찬성/반대 투표 기간이 아닙니다.')
             return
 
