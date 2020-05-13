@@ -21,11 +21,18 @@ class MafiaUser:
         self.give_life_count = 0
         self.embargo_count = 0
         self.terror_target = -1
+        self.gamble_count = 0
 
     async def get_dm_channel(self):
         self.dm_channel = self.user.dm_channel
         if self.dm_channel is None:
             self.dm_channel = await self.user.create_dm()
+
+    async def permission_edit(self, mute: bool, deafen: bool):
+        try:
+            await self.user.edit(reason='For mafia', mute=mute, deafen=deafen)
+        except discord.HTTPException as he:
+            repr(he)
 
 
 class MafiaGame(GameInterface):
@@ -41,24 +48,32 @@ class MafiaGame(GameInterface):
     leader = 'leader'
     shaman = 'shaman'
     miner = 'miner'
+    gambler = 'gambler'
 
     def __init__(self):
         GameInterface.__init__(self)
         self.COMMANDS = {'종료': self.end_game}
         self.LISTENER = self.listener
+
+        self.MAFIA_TYPE_A_COMMANDS = {'계엄령': self.toggle_martial_law, '찬성': self.add_yes_count, '반대': self.add_no_count}
+        self.MAFIA_TYPE_B_COMMANDS = {'조사': self.search, '공격': self.attack, '투표': self.vote, '보호': self.heal,
+                                      '특종작성': self.write_report, '목표설정': self.set_terror_target, '입막음': self.embargo,
+                                      '성불': self.give_life, '승부': self.begin_gamble}
         self.busy = False
         self.players = []
         self.nick_to_id = {}
         self.mode = 'unknown'
         self.chooses = {}
+        self.is_active_boolean_chooses = False
+        self.boolean_chooses = {}
         self.day = 0
         self.run = False
         self.martial_law = False
+        self.gamble_law = None
+        self.gamble_chooses = {}
 
     async def start(self):
-        while self.busy:
-            await asyncio.sleep(0.05)
-        self.busy = True
+        await self.acquire_mutex()
         self.day = 0
         self.run = True
         self.martial_law = False
@@ -79,7 +94,8 @@ class MafiaGame(GameInterface):
             self.players[dices[3]].role = self.mafia
             await self.send_message_for_mafia(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
             await self.send_message_for_mafia(self.players[dices[3]], '뭘 그렇게 보쇼? 나 마피아요')
-            special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader, self.miner]
+            special_role_list = [self.shaman, self.reporter, self.politician, self.terrorist, self.leader, self.miner,
+                                 self.gambler]
             random.shuffle(special_role_list)
             for k in range(len(self.players) - 4):
                 self.players[dices[4 + k]].role = special_role_list[k]
@@ -88,53 +104,48 @@ class MafiaGame(GameInterface):
             embed = self.get_role_embed(player.role)
             embed.set_author(name=player.name, icon_url=player.user.avatar_url)
             await player.dm_channel.send(embed=embed)
-            try:
-                await player.user.edit(reason='For mafia', mute=True, deafen=True)
-            except discord.HTTPException as he:
-                pass
+            await player.permission_edit(mute=True, deafen=True)
+
         self.busy = False
         self.mode = '밤'
         await self.broadcast('>>> 40초 뒤 해가 뜹니다.')
-        await self.delay_time_for_night(10)
+        await self.delay(10)
         while self.run:
             await self.broadcast('>>> 30초 뒤 해가 뜹니다.')
-            await self.delay_time_for_night(20)
+            await self.delay(20)
             await self.broadcast('>>> 10초 뒤 해가 뜹니다.')
-            await self.delay_time_for_night(7)
+            await self.delay(7)
             await self.broadcast('>>> 3초 뒤 해가 뜹니다.')
-            await self.delay_time_for_night(1)
+            await self.delay(1)
             await self.broadcast('>>> 2초 뒤 해가 뜹니다.')
-            await self.delay_time_for_night(1)
+            await self.delay(1)
             await self.broadcast('>>> 1초 뒤 해가 뜹니다.')
-            await self.delay_time_for_night(1)
+            await self.delay(1)
             if not self.run:
                 break
             await self.day_begin()
             if not self.run:
                 break
             for player in self.players:
-                try:
-                    if player.live:
-                        await player.user.edit(reason='For mafia', mute=False, deafen=False)
-                    else:
-                        await player.user.edit(reason='For mafia', mute=True, deafen=False)
-                except discord.HTTPException as he:
-                    pass
+                if player.live:
+                    await player.permission_edit(mute=False, deafen=False)
+                else:
+                    await player.permission_edit(mute=True, deafen=False)
             if self.is_game_finished() != '':
                 break
 
             await self.broadcast('>>> 60초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(30)
+            await self.delay(30)
             await self.broadcast('>>> 30초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(20)
+            await self.delay(20)
             await self.broadcast('>>> 10초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(7)
+            await self.delay(7)
             await self.broadcast('>>> 3초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(1)
+            await self.delay(1)
             await self.broadcast('>>> 2초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(1)
+            await self.delay(1)
             await self.broadcast('>>> 1초 뒤 해가 저뭅니다.')
-            await self.delay_time_for_day(1)
+            await self.delay(1)
             if not self.run:
                 break
             await self.night_begin()
@@ -143,27 +154,26 @@ class MafiaGame(GameInterface):
             if self.is_game_finished() != '':
                 break
             for player in self.players:
-                try:
-                    if player.live:
-                        await player.user.edit(reason='For mafia', mute=True, deafen=True)
-                    else:
-                        await player.user.edit(reason='For mafia', mute=False, deafen=False)
-                except discord.HTTPException as he:
-                    pass
+                if player.live:
+                    await player.permission_edit(mute=True, deafen=True)
+                else:
+                    await player.permission_edit(mute=False, deafen=False)
 
         await self.end_game()
 
-    async def delay_time_for_day(self, seconds: int):
-        for k in range(seconds * 10):
-            if self.is_vote_finished() or (not self.run):
-                break
-            await asyncio.sleep(0.1)
-
-    async def delay_time_for_night(self, seconds: int):
-        for k in range(seconds * 10):
-            if not self.run:
-                break
-            await asyncio.sleep(0.1)
+    async def delay(self, seconds: int):
+        if self.mode == '낮':
+            for k in range(seconds * 10):
+                while self.gamble_law is not None:
+                    await asyncio.sleep(0.1)
+                if self.is_vote_finished() or (not self.run):
+                    break
+                await asyncio.sleep(0.1)
+        else:
+            for k in range(seconds * 10):
+                if not self.run:
+                    break
+                await asyncio.sleep(0.1)
 
     def get_role_embed(self, role: str):
         embed = discord.Embed()
@@ -184,7 +194,7 @@ class MafiaGame(GameInterface):
             embed.description += '\n당신은 경찰입니다. 진실을 알리고 마피아를 찾아내 시민팀을 승리로 이끄세요.'
         elif role == self.reporter:
             embed.title = f'당신은 기자입니다.'
-            embed.description += '\nㄱ특종 홍길동 : 이 명령어로 밤에 특종 작성하여 다음날 그 사람을 직업을 공표 할 수 있습니다.(1회용)'
+            embed.description += '\nㄱ특종작성 홍길동 : 이 명령어로 밤에 특종 작성하여 다음날 그 사람을 직업을 공표 할 수 있습니다.(1회용)'
             embed.description += '\n당신은 기자입니다. 주목받는 특종을 내십시요.'
         elif role == self.politician:
             embed.title = f'당신은 정치인입니다.'
@@ -211,6 +221,10 @@ class MafiaGame(GameInterface):
             embed.title = f'당신은 도굴꾼입니다.'
             embed.description += '\n도굴: 첫날 밤에 죽은 사람의 직업을 얻습니다.'
             embed.description += '\n당신은 도굴꾼입니다. 당신의 잠재적인 능력을 믿으세요.'
+        elif role == self.gambler:
+            embed.title = f'당신은 승부사입니다.'
+            embed.description += '\nㄱ승부: 낮에 다른 사람에게 승부를 겁니다. 승부에서 패배한 쪽은 즉사합니다.(하루 1번)'
+            embed.description += '\n당신은 승부사입니다. 가장 위험한 도전을 하여 가장 달콤한 승리를 쟁취하세요.'
         return embed
 
     async def broadcast_report(self, actor: MafiaUser, target: MafiaUser):
@@ -257,6 +271,11 @@ class MafiaGame(GameInterface):
                     embed.description += ', '
                 embed.description += player.name
         await self.broadcast(embed=embed)
+
+    async def acquire_mutex(self):
+        while self.busy:
+            await asyncio.sleep(0.05)
+        self.busy = True
 
     def is_game_finished(self):
         mafia_count = 0
@@ -318,9 +337,7 @@ class MafiaGame(GameInterface):
         return None
 
     async def day_begin(self):
-        while self.busy:
-            await asyncio.sleep(0.05)
-        self.busy = True
+        await self.acquire_mutex()
         self.mode = '낮'
         self.day += 1
         embed = discord.Embed()
@@ -375,17 +392,17 @@ class MafiaGame(GameInterface):
                 else:
                     embed.title = f'{target.name}님이 행방불명 됐습니다.'
                 target.live = False
-                try:
-                    await target.user.edit(reason='For mafia', mute=False, deafen=False)
-                except discord.HTTPException as he:
-                    pass
-                if self.day == 1:
-                    for player in self.players:
-                        if player.role == self.miner:
+                await target.permission_edit(mute=False, deafen=False)
+
+                for player in self.players:
+                    if player.role == self.miner:
+                        if self.day == 1:
                             player.role = target.role
                             miner_embed = self.get_role_embed(player.role)
                             miner_embed.set_author(name=player.name, icon_url=player.user.avatar_url)
                             await player.dm_channel.send(embed=miner_embed)
+                    elif player.role == self.gambler:
+                        player.gamble_count = 0
         else:
             embed.title = '낮이 밝았습니다. 아무일도 일어나지 않았습니다.'
         embed.description += '\n생존자들: '
@@ -409,10 +426,7 @@ class MafiaGame(GameInterface):
             embed.description = '당신이 죽었다고 생각하였으나 그저 기분나쁜 꿈이였나 봅니다. 그러나 다른 생존자들은 아직 당신이 살았다는것을 모릅니다.'
             target.live = True
             await target.dm_channel.send(embed=embed)
-            try:
-                await target.user.edit(reason='For mafia', mute=False, deafen=False)
-            except discord.HTTPException as he:
-                pass
+            await target.permission_edit(mute=False, deafen=False)
 
         if self.reporter in self.chooses:
             actor = self.players[self.chooses[self.reporter][0]]
@@ -425,11 +439,7 @@ class MafiaGame(GameInterface):
         self.busy = False
 
     async def night_begin(self):
-        while self.busy:
-            await asyncio.sleep(0.05)
-        self.busy = True
-        self.mode = '밤'
-
+        await self.acquire_mutex()
         votes = {}
         for vote in self.chooses.values():
             if vote not in votes:
@@ -453,46 +463,69 @@ class MafiaGame(GameInterface):
                 if votes[-1][1] == votes[-2][1]:
                     is_draw = True
             if is_draw:
-                await self.broadcast(f'>>> 최다득표자가 1명이 넘기 때문에 투표는 무효가 됩니다.')
+                await self.broadcast(f'>>> 최다득표자가 1명이 넘습니다.')
             elif self.players[votes[-1][0]].role == self.politician:
                 await self.broadcast(
                     f'>>> 그러나 피선거자인 {self.players[votes[-1][0]].name}(은)는 국회의원은 헌법 44조'
                     '"현행범인 경우를 제외하고는 회기중 국회의 동의 없이 체포 또는 구금되지 아니한다." 에 의거하여 사형이 불가합니다./')
             else:
                 target = self.players[votes[-1][0]]
-                target.live = False
-                try:
-                    await target.user.edit(reason='For mafia', mute=False, deafen=False)
-                except discord.HTTPException as he:
-                    pass
+                self.boolean_chooses = {}
+                self.is_active_boolean_chooses = True
+                await self.broadcast(f'>>> {target.name}를 사형 할 것입니까?\nㄱ찬성 or ㄱ반대')
+                self.busy = False
+                await self.broadcast(f'>>> 20초 후 찬성/반대 투표가 끝납니다.')
+                await self.delay(10)
+                await self.broadcast(f'>>> 10초 후 찬성/반대 투표가 끝납니다.')
+                await self.delay(7)
+                await self.broadcast(f'>>> 3초 후 찬성/반대 투표가 끝납니다.')
+                await self.delay(1)
+                await self.broadcast(f'>>> 2초 후 찬성/반대 투표가 끝납니다.')
+                await self.delay(1)
+                await self.broadcast(f'>>> 1초 후 찬성/반대 투표가 끝납니다.')
+                await self.delay(1)
 
-                embed = discord.Embed()
-                embed.set_author(name=target.name, icon_url=target.user.avatar_url)
-                embed.title = f'{target.name}는 민주적 절차에 따라 사형되었습니다.'
+                await self.acquire_mutex()
+                self.is_active_boolean_chooses = False
+                yes_count = 0
+                no_count = 0
+                for boolean in self.boolean_chooses.values():
+                    if boolean:
+                        yes_count += 1
+                    else:
+                        no_count += 1
 
-                await self.broadcast(embed=embed)
-                await asyncio.sleep(1)
-                if target.role == self.mafia:
-                    await self.broadcast('>>> 그는 마피아로 밝혀졌습니다.')
-                elif target.role == self.terrorist:
-                    await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
-                    if target.terror_target != -1:
-                        await asyncio.sleep(1)
-                        terror_target = self.players[target.terror_target]
-                        if terror_target.live:
-                            terror_target.live = False
-                            await self.broadcast(f'>>> {terror_target.name}가 집에 들어가는 순간 폭발과 함께 사라졌습니다.')
-                            try:
-                                await terror_target.user.edit(reason='For mafia', mute=False, deafen=False)
-                            except discord.HTTPException as he:
-                                pass
-                        else:
-                            await self.broadcast(f'>>> {terror_target.name}의 집에서 폭발음이 들었습니다.')
-                else:
-                    await self.broadcast('>>> 그는 선량한 시민으로 밝혀졌습니다.')
+                await self.broadcast(f'>>> 개표 결과 찬성 {yes_count}표, 반대 {no_count}표 입니다.')
+                if yes_count > no_count:
+                    target.live = False
+                    await target.permission_edit(mute=False, deafen=False)
+
+                    embed = discord.Embed()
+                    embed.set_author(name=target.name, icon_url=target.user.avatar_url)
+                    embed.title = f'{target.name}는 민주적 절차에 따라 사형되었습니다.'
+
+                    await self.broadcast(embed=embed)
+                    await asyncio.sleep(1)
+                    if target.role == self.mafia:
+                        await self.broadcast('>>> 그는 마피아로 밝혀졌습니다.')
+                    elif target.role == self.terrorist:
+                        await self.broadcast('>>> 그는 테러리스트로 밝혀졌습니다.')
+                        if target.terror_target != -1:
+                            await asyncio.sleep(1)
+                            terror_target = self.players[target.terror_target]
+                            if terror_target.live:
+                                terror_target.live = False
+                                await self.broadcast(f'>>> {terror_target.name}가 집에 들어가는 순간 폭발과 함께 사라졌습니다.')
+                                await terror_target.permission_edit(mute=False, deafen=False)
+
+                            else:
+                                await self.broadcast(f'>>> {terror_target.name}의 집에서 폭발음이 들었습니다.')
+                    else:
+                        await self.broadcast('>>> 그는 선량한 시민으로 밝혀졌습니다.')
         await asyncio.sleep(1)
         await self.broadcast('>>> ...해가 저뭅니다')
         await self.daily_alarm()
+        self.mode = '밤'
         self.chooses = {}
 
         for player in self.players:
@@ -504,9 +537,8 @@ class MafiaGame(GameInterface):
         self.busy = False
 
     async def listener(self, channel: GameChannel, bot: static.DiscordBot, msg: discord.Message):
-        while self.busy:
-            await asyncio.sleep(0.05)
-        self.busy = True
+        await self.acquire_mutex()
+        repr(bot)
 
         if not self.run:
             self.busy = False
@@ -519,79 +551,48 @@ class MafiaGame(GameInterface):
 
         if actor is None:
             self.busy = False
-
             return
-        if actor.live and msg.content.find('ㄱ조사 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.search(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ공격 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.attack(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ투표 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.vote(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ보호 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.heal(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ계엄령') == 0:
-            await self.toggle_martial_law(channel, actor, msg)
-        elif actor.live and msg.content.find('ㄱ특종 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.write_report(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ목표설정 ') == 0:
-            query = msg.content[6:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.set_terror_target(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ입막음 ') == 0:
-            query = msg.content[5:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.embargo(channel, actor, target, msg)
-        elif actor.live and msg.content.find('ㄱ성불 ') == 0:
-            query = msg.content[4:].strip()
-            if query not in self.nick_to_id:
-                self.busy = False
-                return
-            target = self.players[self.nick_to_id[query]]
-            await self.give_life(channel, actor, target, msg)
-        elif msg.content.find('ㄱ') == 0:
-            await msg.add_reaction(emoji='🛑')
-        else:
-            if actor.live and self.mode == '낮' and (not actor.mute_by_pol):
-                await self.send_message_for_everyone(actor, msg.content)
-            elif self.mode == '밤':
-                if actor.live and actor.role == self.mafia:
-                    await self.send_message_for_mafia(actor, msg.content)
-                elif (not actor.live) or actor.role == self.shaman:
-                    await self.send_message_for_afterlives(actor, msg.content)
+
+        matched = False
+        while True:
+            for command in self.MAFIA_TYPE_A_COMMANDS:
+                if msg.content.strip() == f'ㄱ{command}':
+                    await self.MAFIA_TYPE_A_COMMANDS[command](actor, msg)
+                    matched = True
+                    break
+            if matched:
+                break
+            for command in self.MAFIA_TYPE_B_COMMANDS:
+                if msg.content.strip() == f'ㄱ{command} ':
+                    query = msg.content[len(command) + 2:].strip()
+                    if query not in self.nick_to_id:
+                        self.busy = False
+                        return
+                    target = self.players[self.nick_to_id[query]]
+                    await self.MAFIA_TYPE_B_COMMANDS[command](actor, target, msg)
+                    matched = True
+                    break
+            if matched:
+                break
+            if msg.content.find('ㄱ') == 0:
+                await msg.add_reaction(emoji='🛑')
+            else:
+                if actor.live and self.mode == '낮' and (not actor.mute_by_pol):
+                    await self.send_message_for_everyone(actor, msg.content)
+                elif self.mode == '밤':
+                    if actor.live and actor.role == self.mafia:
+                        await self.send_message_for_mafia(actor, msg.content)
+                    elif (not actor.live) or actor.role == self.shaman:
+                        await self.send_message_for_afterlives(actor, msg.content)
+            break
+
         self.busy = False
 
-    async def vote(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def vote(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '낮':
             await msg.channel.send('>>> 낮에만 투표할 수 있습니다.')
             return
@@ -616,13 +617,21 @@ class MafiaGame(GameInterface):
             self.chooses[f'pol_clone'] = target.pk
             await self.send_message_for_everyone(actor, f'{actor.name}의 지지자가 1표를 주었습니다.')
 
-    async def search(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def search(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '밤':
             await msg.channel.send('>>> 밤에만 조사할 수 있습니다.')
             return
 
         if actor.role != self.police:
             await msg.channel.send('>>> ㄱ조사 명령어는 경찰만 사용 가능합니다.')
+            return
+
+        if actor.pk == target.pk:
+            await msg.channel.send('>>> 자기 자신을 조사할 수 없습니다.')
             return
 
         if self.police in self.chooses:
@@ -639,13 +648,21 @@ class MafiaGame(GameInterface):
         else:
             await msg.channel.send('>>> 조사한 결과 그는 마피아가 아닙니다.')
 
-    async def attack(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def attack(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '밤':
             await msg.channel.send('>>> 밤에만 공격할 수 있습니다.')
             return
 
         if actor.role != self.mafia:
             await msg.channel.send('>>> ㄱ공격 명령어는 마피아만 사용 가능합니다.')
+            return
+
+        if actor.pk == target.pk:
+            await msg.channel.send('>>> 자기 자신을 공격 할 수 없습니다.')
             return
 
         if not target.live:
@@ -657,7 +674,11 @@ class MafiaGame(GameInterface):
         self.chooses[self.mafia] = target.pk
         await msg.add_reaction(emoji='👌')
 
-    async def heal(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def heal(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '밤':
             await msg.channel.send('>>> 밤에만 보호할 수 있습니다.')
             return
@@ -673,7 +694,11 @@ class MafiaGame(GameInterface):
         self.chooses[self.doctor] = target.pk
         await msg.add_reaction(emoji='👌')
 
-    async def write_report(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def write_report(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '밤':
             await msg.channel.send('>>> 밤에만 특종을 낼 수 있습니다.')
             return
@@ -688,16 +713,28 @@ class MafiaGame(GameInterface):
 
         self.chooses[self.reporter] = [actor.pk, target.pk]
 
-    async def set_terror_target(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def set_terror_target(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if actor.role != self.terrorist:
             await msg.channel.send('>>> ㄱ목표설정 명령어는 테러리스트만 사용 가능합니다.')
+            return
+
+        if actor.pk != target.pk:
+            await msg.channel.send('>>> 스스로를 인질로 삼을수 없습니다.')
             return
 
         actor.terror_target = target.pk
         await target.dm_channel.send('>>> 테러리스트가 당신을 인질로 설정했습니다.')
         await msg.add_reaction(emoji='👌')
 
-    async def toggle_martial_law(self, channel: GameChannel, actor: MafiaUser, msg: discord.Message):
+    async def toggle_martial_law(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '낮':
             await msg.channel.send('>>> 낮에만 계엄령을 설정/해제 할 수 있습니다.')
             return
@@ -719,7 +756,11 @@ class MafiaGame(GameInterface):
             embed.title = '지금부터 계엄령을 해제합니다.'
         await self.broadcast(embed=embed)
 
-    async def give_life(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def give_life(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '밤':
             await msg.channel.send('>>> 밤에만 영혼을 성불 시킬 수 있습니다.')
             return
@@ -739,7 +780,11 @@ class MafiaGame(GameInterface):
         self.chooses[self.shaman] = [actor.pk, target.pk]
         await msg.channel.send(f'>>> {target.name}에게 생명을 부여했습니다. 그는 다음날 기적처럼 돌아올것 입니다.')
 
-    async def embargo(self, channel: GameChannel, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+    async def embargo(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
         if self.mode != '낮':
             await msg.channel.send('>>> 낮에만 입막음을 할 수 있습니다.')
             return
@@ -752,6 +797,10 @@ class MafiaGame(GameInterface):
             await msg.channel.send('>>> ㄱ입막음 명렁어는 1회만  사용가능합니다.')
             return
 
+        if actor.pk == target.pk:
+            await msg.channel.send('>>> 자기 자신에게 입막음을 할 수 없습니다.')
+            return
+
         if not target.live:
             await msg.channel.send('>>> 죽은 자의 입을 막을 수 없습니다.')
 
@@ -762,25 +811,187 @@ class MafiaGame(GameInterface):
         embed.title = f'>>> {target.name}는 입막음 당했습니다.'
         embed.description = '당신들 누구야 읍읍!'
         await self.broadcast(embed=embed)
-        try:
-            await target.user.edit(reason='For mafia', mute=True, deafen=False)
-        except discord.HTTPException as he:
-            pass
+        await target.permission_edit(mute=True, deafen=False)
+
+    async def add_yes_count(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.is_active_boolean_chooses:
+            await msg.channel.send('>>> 찬성/반대 투표 기간이 아닙니다.')
+            return
+
+        if actor.pk in self.boolean_chooses:
+            await msg.channel.send('>>> 이미 투표 했습니다.')
+            return
+
+        self.boolean_chooses[actor.pk] = True
+        await msg.add_reaction(emoji='👌')
+
+    async def add_no_count(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.is_active_boolean_chooses:
+            await msg.channel.send('>>> 찬성/반대 투표 기간이 아닙니다.')
+            return
+
+        if actor.pk in self.boolean_chooses:
+            await msg.channel.send('>>> 이미 투표 했습니다.')
+            return
+
+        self.boolean_chooses[actor.pk] = False
+        await msg.add_reaction(emoji='👌')
+
+    async def begin_gamble(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if not target.live:
+            await msg.channel.send('>>> 죽은 자에겐 승부를 걸 수 없습니다.')
+
+        if actor.role != self.gambler:
+            await msg.channel.send('>>> ㄱ승부 명령어는 승부사만 사용 가능합니다.')
+            return
+
+        if self.mode != '낮':
+            await msg.channel.send('>>> 낮에만 승부를 걸 수 있습니다.')
+            return
+
+        if actor.pk == target.pk:
+            await msg.channel.send('>>> 자기 자신에겐 승부를 걸 수 없습니다.')
+            return
+
+        if actor.gamble_count > 0:
+            await msg.channel.send('>>> 승부는 하루에 한번만 걸 수 있습니다.')
+            return
+
+        actor.gamble_count += 1
+
+        self.gamble_law = [actor.pk, target.pk]
+        await self.broadcast(f'>>> {actor.name}이 {target.name}에게 승부를 걸었습니다.\n패배자는 **사망**합니다.')
+        text = 'ㄱ가위, ㄱ바위, ㄱ보 중 하나의 명령어를 사용하여 승부를 하십시오. 5초안에 내지 않으면 패배로 간주됩니다.'
+        await actor.dm_channel.send(text)
+        await target.dm_channel.send(text)
+        while True:
+            self.gamble_chooses = {}
+            self.busy = False
+
+            await self.delay(5)
+            await self.acquire_mutex()
+            actor_lose = False
+            target_lose = False
+            if actor.pk not in self.gamble_chooses:
+                actor_lose = True
+            if target.pk not in self.gamble_chooses:
+                target_lose = True
+
+            sign_actor = self.gamble_chooses[actor.pk]
+            sign_target = self.gamble_chooses[target.pk]
+            if sign_actor == sign_target:
+                pass
+            elif sign_actor == 'S' and sign_target == 'R':
+                actor_lose = True
+            elif sign_actor == 'R' and sign_target == 'P':
+                actor_lose = True
+            elif sign_actor == 'P' and sign_target == 'S':
+                actor_lose = True
+            else:
+                target_lose = True
+
+            if (actor_lose and target_lose) or (not (actor_lose or target_lose)):
+                await msg.channel.send('>>> 무승부.')
+            else:
+                if actor_lose:
+                    winner = target
+                    loser = actor
+                else:
+                    winner = actor
+                    loser = target
+                embed = discord.Embed()
+                embed.set_author(name=f'{winner.name}의 승리', icon_url=winner.user.avatar_url)
+                embed.description = f'패자 {loser.name}은 죽었습니다.'
+                await self.broadcast(embed=embed)
+                loser.live = False
+                await loser.permission_edit(mute=False, deafen=False)
+                break
+
+        self.gamble_law = None
+
+    async def gamble_rock(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.gamble_law is None:
+            await msg.channel.send('>>> 승부 중이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_law:
+            await msg.channel.send('>>> 승부 대상이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_chooses:
+            await msg.channel.send('>>> 이미 결정했습니다.')
+            return
+
+        self.gamble_chooses[actor.pk] = 'R'
+        await msg.add_reaction(emoji='👌')
+
+    async def gamble_scissor(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.gamble_law is None:
+            await msg.channel.send('>>> 승부 중이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_law:
+            await msg.channel.send('>>> 승부 대상이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_chooses:
+            await msg.channel.send('>>> 이미 결정했습니다.')
+            return
+
+        self.gamble_chooses[actor.pk] = 'S'
+        await msg.add_reaction(emoji='👌')
+
+    async def gamble_paper(self, actor: MafiaUser, msg: discord.Message):
+        if not actor.live:
+            await msg.add_reaction(emoji='💀')
+            return
+
+        if self.gamble_law is None:
+            await msg.channel.send('>>> 승부 중이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_law:
+            await msg.channel.send('>>> 승부 대상이 아닙니다.')
+            return
+
+        if actor.pk in self.gamble_chooses:
+            await msg.channel.send('>>> 이미 결정했습니다.')
+            return
+
+        self.gamble_chooses[actor.pk] = 'P'
+        await msg.add_reaction(emoji='👌')
 
     async def end_game(self, channel: GameChannel = None, query: list = None, msg: discord.Message = None):
-        while self.busy:
-            await asyncio.sleep(0.05)
-        self.busy = True
+        await self.acquire_mutex()
+        repr(query)
+        repr(msg)
 
         if channel is not None:
             if self != channel.running_game:
                 self.busy = False
                 return
         for player in self.players:
-            try:
-                await player.user.edit(reason='For mafia', mute=False, deafen=False)
-            except discord.HTTPException as he:
-                pass
+            await player.permission_edit(mute=False, deafen=False)
 
         if self.is_game_finished() == 'citizen_win':
             text = '>>> 시민이 승리했습니다.'
