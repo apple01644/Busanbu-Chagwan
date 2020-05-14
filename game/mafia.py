@@ -184,7 +184,13 @@ class MafiaGame(GameInterface):
         else:
             for k in range(seconds * 10):
                 if not self.run:
-                    break
+                    break                    
+                if notes is not None:
+                    if notes[0] >= seconds - k / 10:
+                        await self.broadcast(f'>>> 다음 단계까지 {notes[0]}초 남았습니다.')
+                        del notes[0]
+                        if len(notes) == 0:
+                            notes = None
                 await asyncio.sleep(0.1)
 
     def get_role_embed(self, role: str):
