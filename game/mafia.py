@@ -101,15 +101,15 @@ class MafiaGame(GameInterface):
         self.players[dices[1]].role = self.doctor
         self.players[dices[2]].role = self.police
         self.players[dices[3]].role = special_role_list[0]
-        if len(self.players) >= 4:
+        if len(self.players) > 4:
             self.players[dices[4]].role = self.mafia
             await self.send_message_for_mafia_team(self.players[dices[0]], '뭘 그렇게 보쇼? 나 마피아요')
             await self.send_message_for_mafia_team(self.players[dices[4]], '뭘 그렇게 보쇼? 나 마피아요')
-        if len(self.players) >= 6:
+        if len(self.players) > 5:
             self.players[dices[5]].role = self.spy
-            await self.send_message_for_mafia_team(self.players[dices[6]], '그렇지 않아도 기다렸소. 나 스파이요')
+            await self.send_message_for_mafia_team(self.players[dices[5]], '그렇지 않아도 기다렸소. 나 스파이요')
 
-        if len(self.players) >= 8:
+        if len(self.players) > 7:
             self.players[dices[7]].role = special_role_list[1]
 
         for player in self.players:
