@@ -565,9 +565,9 @@ class MafiaGame(GameInterface):
                         await self.broadcast(f'>>> 사형 대상이 이미 숨졌기 때문에 투표는 종료 됩니다.')
         await asyncio.sleep(1)
         await self.broadcast('>>> ...해가 저뭅니다')
-        await self.daily_alarm()
         self.mode = '밤'
         self.chooses = {}
+        await self.daily_alarm()
 
         for player in self.players:
             if player.role == self.shaman:
