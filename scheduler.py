@@ -44,7 +44,7 @@ class Scheduler:
                 desc += f'{k}반 알림방: ' + config.learn_class_info[k]['bookmark']['알림방']["link"] + '\n'
             desc += '\n다음 시간'
             for k in [1, 2, 3]:
-                class_data = spreadsheet.run_command(f'ㄱ시간표 {k}반')['1교시']
+                class_data = spreadsheet.run_command(f'ㄱ시간표 {k}반')['1 교시']
                 desc += f'> {k}반 {class_data["class_name"]}\n'
                 if class_data["teacher_list"]:
                     desc += f'> {class_data["teacher_list"]}\n'
