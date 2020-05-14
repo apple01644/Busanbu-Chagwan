@@ -163,6 +163,7 @@ class MafiaGame(GameInterface):
 
     async def delay(self, seconds: int, notes: list = None):
         if self.mode == '낮':
+            self.shorted_time = 0
             for k in range(seconds * 10):
                 while self.gamble_law is not None:
                     await asyncio.sleep(0.1)
@@ -1068,8 +1069,9 @@ class MafiaGame(GameInterface):
             return
 
         actor.spying_count += 1
-
+        
         report = self.get_report(actor, target)
+        report.set_author(name=f'스파이 {actor.name}', icon_url=actor.user.avatar_url)
         await self.broadcast_for_mafia_team(embed=report)
 
     async def end_game(self, channel: GameChannel = None, query: list = None, msg: discord.Message = None):
