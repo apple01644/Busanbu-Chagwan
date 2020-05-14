@@ -108,11 +108,10 @@ class MafiaGame(GameInterface):
 
         if len(self.players) > 6:
             self.players[dices[6]].role = special_role_list[1]
-            
+
         if len(self.players) > 7:
             self.players[dices[7]].role = self.spy
             await self.send_message_for_mafia_team(self.players[dices[7]], '그렇지 않아도 기다렸소. 나 스파이요')
-
 
         for player in self.players:
             embed = self.get_role_embed(player.role)
@@ -184,7 +183,7 @@ class MafiaGame(GameInterface):
         else:
             for k in range(seconds * 10):
                 if not self.run:
-                    break                    
+                    break
                 if notes is not None:
                     if notes[0] >= seconds - k / 10:
                         await self.broadcast(f'>>> 다음 단계까지 {notes[0]}초 남았습니다.')
@@ -253,7 +252,6 @@ class MafiaGame(GameInterface):
 
     def get_report(self, actor: MafiaUser, target: MafiaUser):
         embed = discord.Embed()
-        embed.set_author(name=f'기자 {actor.name}', icon_url=actor.user.avatar_url)
         if random.randint(0, 2) == 0:
             embed.title = '[단독] '
         elif random.randint(0, 1) == 0:
@@ -289,6 +287,8 @@ class MafiaGame(GameInterface):
             ]
             random.shuffle(citizen_texts)
             embed.title += f'{target.name}은 {citizen_texts[0]}로 밝혀졌습니다!!!'
+        embed.set_author(name=embed.title, icon_url=actor.user.avatar_url)
+        embed.title = f'기자 {actor.name}'
         return embed
 
     async def daily_alarm(self):
@@ -661,12 +661,15 @@ class MafiaGame(GameInterface):
 
         self.chooses[actor.pk] = target.pk
 
-        await msg.add_reaction(emoji='👌')
-        await self.send_message_for_everyone(actor, f'{target.name}에게 1표를 주었습니다.')
+        embed = discord.Embed()
+        embed.set_author(name=f'{target.name}에게 1표를 주었습니다.', icon_url=actor.user.avatar_url)
+        embed.description = actor.name
+        await self.broadcast(embed=embed)
 
         if actor.role == self.politician:
             self.chooses[f'pol_clone'] = target.pk
-            await self.send_message_for_everyone(actor, f'{actor.name}의 지지자가 1표를 주었습니다.')
+            embed.set_author(name=f'{target.name}에게 {actor.name} 지지자가 1표를 주었습니다.', icon_url=actor.user.avatar_url)
+            await self.broadcast(embed=embed)
 
     async def search(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if not actor.live:
@@ -882,8 +885,10 @@ class MafiaGame(GameInterface):
             return
 
         self.boolean_chooses[actor.pk] = True
-        await msg.add_reaction(emoji='👌')
-        await self.send_message_for_everyone(actor, f'{actor.name}(은)는 사형을 찬성합니다.')
+
+        embed = discord.Embed()
+        embed.set_author(name=f'{actor.name}(은)는 사형을 찬성합니다.', icon_url=actor.user.avatar_url)
+        await self.broadcast(embed=embed)
 
     async def add_no_count(self, actor: MafiaUser, msg: discord.Message):
         if not actor.live:
@@ -899,8 +904,10 @@ class MafiaGame(GameInterface):
             return
 
         self.boolean_chooses[actor.pk] = False
-        await msg.add_reaction(emoji='👌')
-        await self.send_message_for_everyone(actor, f'{actor.name}(은)는 사형을 반대합니다.')
+
+        embed = discord.Embed()
+        embed.set_author(name=f'{actor.name}(은)는 사형을 반대합니다.', icon_url=actor.user.avatar_url)
+        await self.broadcast(embed=embed)
 
     async def begin_gamble(self, actor: MafiaUser, target: MafiaUser, msg: discord.Message):
         if not actor.live:
@@ -1077,7 +1084,7 @@ class MafiaGame(GameInterface):
             return
 
         actor.spying_count += 1
-        
+
         report = self.get_report(actor, target)
         report.set_author(name=f'스파이 {actor.name}', icon_url=actor.user.avatar_url)
         await self.broadcast_for_mafia_team(embed=report)
