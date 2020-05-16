@@ -44,11 +44,12 @@ class Scheduler:
                 desc += f'{k}반 알림방: ' + config.learn_class_info[k]['bookmark']['알림방']["link"] + '\n'
             desc += '\n다음 시간'
             for k in [1, 2, 3]:
-                class_data = spreadsheet.run_command(f'ㄱ시간표 {k}반')['1 교시']
+                raw_data = spreadsheet.run_command(f'ㄱ시간표 {k}반')
+                class_data = raw_data['1 교시']
                 desc += f'> {k}반 {class_data["class_name"]}\n'
-                if class_data["teacher_list"]:
-                    desc += f'> {class_data["teacher_list"]}\n'
-                if not class_data['헤더']['is_template']:
+                if class_data["teacher_desc"]:
+                    desc += f'> {class_data["teacher_desc"]}\n'
+                if not raw_data['헤더']['is_template']:
                     if class_data["objective"]:
                         desc += f'> {class_data["objective"]}\n'
                 if class_data["class_data"]:
