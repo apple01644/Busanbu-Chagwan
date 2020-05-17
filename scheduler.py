@@ -17,6 +17,7 @@ class Scheduler:
     second_channel = None
     third_channel = None
     bias = datetime.timedelta(seconds=-60)
+    k = 0
 
     @tasks.loop(seconds=1.0)
     async def scheduler_loop(self):
@@ -37,7 +38,8 @@ class Scheduler:
         if date.weekday() in [5, 6]:
             return
 
-        if self.last_run_time < datetime.time(hour=8, minute=20) <= now:
+        if self.last_run_time < datetime.time(hour=8, minute=20) <= now or self.k == 0:
+            self.k = 1
             title = '%02d월 %02d일 알람방' % (self.last_run_date.month, self.last_run_date.day)
             desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
             for k in [1, 2, 3]:
@@ -64,21 +66,21 @@ class Scheduler:
                 data = spreadsheet.command_data_to_description(result)
                 await self.first_channel.send(embed=discord.Embed(
                     title=data['title'],
-                    description=data['description'] + f'\n<@&{static.discord_info["1st class role id"]}>'))
+                    description=data['description'] + f'\n<@&{config.discord_info["1st class role id"]}>'))
 
             result = spreadsheet.run_command('ㄱ시간표', ['3학년 2반'])
             if result['status'] == 200:
                 data = spreadsheet.command_data_to_description(result)
                 await self.second_channel.send(embed=discord.Embed(
                     title=data['title'],
-                    description=data['description'] + f'\n<@&{static.discord_info["2nd class role id"]}>'))
+                    description=data['description'] + f'\n<@&{config.discord_info["2nd class role id"]}>'))
 
             result = spreadsheet.run_command('ㄱ시간표', ['3학년 3반'])
             if result['status'] == 200:
                 data = spreadsheet.command_data_to_description(result)
                 await self.third_channel.send(embed=discord.Embed(
                     title=data['title'],
-                    description=data['description'] + f'\n<@&{static.discord_info["3rd class role id"]}>'))
+                    description=data['description'] + f'\n<@&{config.discord_info["3rd class role id"]}>'))
 
         for the_class in config.schedule_info:
             if self.last_run_time < the_class['begin'] <= now:
