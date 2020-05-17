@@ -17,7 +17,6 @@ class Scheduler:
     second_channel = None
     third_channel = None
     bias = datetime.timedelta(seconds=-60)
-    k = 0
 
     @tasks.loop(seconds=1.0)
     async def scheduler_loop(self):
@@ -38,8 +37,7 @@ class Scheduler:
         if date.weekday() in [5, 6]:
             return
 
-        if self.last_run_time < datetime.time(hour=8, minute=20) <= now or self.k == 0:
-            self.k = 1
+        if self.last_run_time < datetime.time(hour=8, minute=20) <= now:
             title = '%02d월 %02d일 알람방' % (self.last_run_date.month, self.last_run_date.day)
             desc = '바로가기: https://classroom.google.com/u/1/a/not-turned-in/all\n'
             for k in [1, 2, 3]:
