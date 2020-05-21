@@ -153,4 +153,5 @@ discord_info = {
     '1st class role id': 696586929873092639,
     '2nd class role id': 696586953415589940,
     '3rd class role id': 696586970910031923,
+    'admin user id': 348066198983933954,
 }

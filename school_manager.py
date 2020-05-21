@@ -227,7 +227,7 @@ class SchoolManager:
                 await self.cache_event_data(date.year, date.month, date.day)
             except:
                 desc = '>>> NEIS에 등록되지 않은 일자입니다.'
-            return discord.Embed(title=title, description=desc)
+                return discord.Embed(title=title, description=desc)
 
         events = [item for item in self.event_cached_data[index] if grade in item['target']]
         if len(events) == 0:
@@ -281,8 +281,8 @@ class SchoolManager:
                     embed = await self.build_class_embed(now_date, 3, class_number)
                     embed.description += f'\n<@&{roles_id[class_number]}>'
                     await channels[class_number].send(embed=embed)
-                await self.alarm_channel.send(embed=await self.build_class_embed(now_date, 3))
-                await self.alarm_channel.channel.send(embed=await self.build_class_embed(now_date, 1))
+                await self.alarm_channel.send(embed=await self.build_event_embed(now_date, 3))
+                await self.alarm_channel.send(embed=await self.build_meal_embed(now_date, 1))
 
             for the_class in config.schedule_info:
                 if self.last_run_time < the_class['begin'] <= now_time:
@@ -310,9 +310,9 @@ class SchoolManager:
                 elif self.last_run_time < the_class['end'] <= now_time:
                     await self.alarm_channel.send(embed=discord.Embed(title=f'{the_class["index"]}교시 끝\n@everyone'))
                     if the_class["index"] == 4:
-                        await self.alarm_channel.channel.send(embed=await self.build_class_embed(now_date, 2))
+                        await self.alarm_channel.channel.send(embed=await self.build_meal_embed(now_date, 2))
                     if the_class["index"] == 9:
-                        await self.alarm_channel.channel.send(embed=await self.build_class_embed(now_date, 3))
+                        await self.alarm_channel.channel.send(embed=await self.build_meal_embed(now_date, 3))
             self.last_run_time = now_time
         except Exception as e:
             print(traceback.format_exc(), e)
