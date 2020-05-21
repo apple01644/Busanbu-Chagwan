@@ -193,8 +193,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: TrpgManager):
     free_channel = discord_bot.client.get_channel(705958096077324299)
     manager.discord_bot = discord_bot
 
-    @static.CommandBinding.assign_command(discord_bot, '윤수', [free_channel])
-    async def get_timetable(bot: static.DiscordBot, query: list, msg: discord.Message):
+    @static.CommandBinding.assign_command('윤수', [free_channel])
+    async def get_timetable(query: list, msg: discord.Message, **kwargs):
         if len(query) == 0:
             await self.help(msg)
         else:

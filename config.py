@@ -29,6 +29,22 @@ schedule_info = [
      'begin': datetime.time(hour=15, minute=20),
      'end': datetime.time(hour=16, minute=10),
      'duration': '15:20~16:10'},
+    {'index': 8,
+     'begin': datetime.time(hour=16, minute=30),
+     'end': datetime.time(hour=17, minute=20),
+     'duration': '19:10~20:00'},
+    {'index': 9,
+     'begin': datetime.time(hour=17, minute=30),
+     'end': datetime.time(hour=18, minute=20),
+     'duration': '20:10~21:00'},
+    {'index': 10,
+     'begin': datetime.time(hour=19, minute=10),
+     'end': datetime.time(hour=20, minute=00),
+     'duration': '19:10~20:00'},
+    {'index': 11,
+     'begin': datetime.time(hour=20, minute=10),
+     'end': datetime.time(hour=21, minute=00),
+     'duration': '20:10~21:00'},
 ]
 
 learn_class_info = {

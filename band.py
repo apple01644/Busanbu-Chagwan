@@ -3,7 +3,7 @@ import json
 import traceback
 
 import discord
-import requests as req
+import requests_async  as req
 from discord.ext import tasks
 
 import config
@@ -24,12 +24,12 @@ class Band:
                                    'band_key': 'AADe-67DagLFl4xgYFYmMm0r',
                                    'locale': 'ko_KR'}
         self.last_refresh_time = 0
-        self.get_post()
 
-    def get_post(self):
-        posts = json.loads(req.get(self.urls['posts'], params=self.param_for_get_post).text)
+    async def get_post(self):
+        response = await req.get(self.urls['posts'], params=self.param_for_get_post)
+        assert response.status_code == 200
+        posts = json.loads(response.text)
         assert posts["result_code"] == 1
-
         result = [item for item in posts['result_data']['items'] if item['created_at'] > self.last_refresh_time]
         self.last_refresh_time = max([item['created_at'] for item in result] + [self.last_refresh_time])
         return result
@@ -40,17 +40,18 @@ class Band:
         embed.set_author(name=data['author']['name'], icon_url=data['author']['profile_image_url'])
         return embed
 
-    async def heartbeat(self):
-        for item in self.get_post():
-            print(item)
-            await self.band_channel.send(embed=self.get_embed_from_band_data(item))
-            for photo in item['photos']:
-                await self.band_channel.send(photo['url'])
-
     @tasks.loop(seconds=3600.0)
     async def band_parse_loop(self):
         try:
-            await self.heartbeat()
+            if self.last_refresh_time == 0:
+                await self.get_post()
+                return
+
+            posts = await self.get_post()
+            for post in posts:
+                await self.band_channel.send(embed=self.get_embed_from_band_data(post))
+                for photo in post['photos']:
+                    await self.band_channel.send(photo['url'])
         except Exception as e:
             print(traceback.format_exc(), e)
 

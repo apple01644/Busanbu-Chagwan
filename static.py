@@ -18,9 +18,9 @@ class CommandBinding:
             setattr(self, key, kwargs[key])
 
     @classmethod
-    def assign_command(cls, obj, command_name, channel_filter):
+    def assign_command(cls, command_name, channel_filter, base_object=None):
         def assign(function):
-            cls.command_binding.append({'key': command_name, 'value': CommandBinding(baseobject=obj,
+            cls.command_binding.append({'key': command_name, 'value': CommandBinding(baseobject=base_object,
                                                                                      command_name=command_name,
                                                                                      channel_filter=channel_filter,
                                                                                      function=function)})
@@ -28,9 +28,9 @@ class CommandBinding:
         return assign
 
     @classmethod
-    def assign_listener(cls, obj, listener_name, channel_filter):
+    def assign_listener(cls, base_object, listener_name, channel_filter):
         def assign(function):
-            cls.listener_binding.append(CommandBinding(baseobject=obj,
+            cls.listener_binding.append(CommandBinding(baseobject=base_object,
                                                        command_name=listener_name,
                                                        channel_filter=channel_filter,
                                                        function=function))
@@ -41,7 +41,7 @@ class CommandBinding:
     async def run_listener(cls, bot, msg):
         for listener in cls.listener_binding:
             try:
-                await listener.function(listener.baseobject, bot, msg)
+                await listener.function(bot, msg, baseobject=listener.baseobject)
             except:
                 await msg.add_reaction(emoji='❕')
                 error = traceback.format_exc()
@@ -60,7 +60,7 @@ class CommandBinding:
                 else:
                     match_count += 1
                     try:
-                        await command_info.function(command_info.baseobject, query, msg)
+                        await command_info.function(query, msg, base_object=command_info.baseobject)
                     except:
                         await msg.add_reaction(emoji='❕')
                         error = traceback.format_exc()
@@ -99,7 +99,7 @@ class DiscordBot:
     client = None
     channel = None
     guild = None
-    discord_token = open('discord_bot_token', 'r').read()
+    discord_token = os.getenv('DISCORD_TOKEN')
 
     def __init__(self, client):
         self.client = client

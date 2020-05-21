@@ -1,9 +1,11 @@
 import importlib
 import os
-
-import static
+from dotenv import load_dotenv
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(dotenv_path='.env')
+
+import static
 
 
 def import_files(path, extra_dir=''):

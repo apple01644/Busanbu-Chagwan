@@ -586,7 +586,8 @@ class MafiaGame(GameInterface):
 
         self.busy = False
 
-    async def listener(self, channel: GameChannel, bot: static.DiscordBot, msg: discord.Message):
+    async def listener(self, bot: static.DiscordBot, msg: discord.Message, base_object=None, **kwargs):
+        channel = base_object
         await self.acquire_mutex()
         repr(bot)
 

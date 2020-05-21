@@ -105,8 +105,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: GameManager):
     self.guild = discord_bot.client.get_guild(config.discord_info['black cow guild id'])
     await self.ready(discord_bot)
 
-    @static.CommandBinding.assign_command(discord_bot, '게임참가', self.allowed_channels)
-    async def join_game(bot: static.DiscordBot, query: list, msg: discord.Message):
+    @static.CommandBinding.assign_command('게임참가', self.allowed_channels)
+    async def join_game(query: list, msg: discord.Message, **kwargs):
 
         game_channel = self.game_channels[msg.channel.id]
         if game_channel.running_game is not None:
@@ -150,8 +150,8 @@ async def on_ready(discord_bot: static.DiscordBot, self: GameManager):
                             await msg.add_reaction(emoji='🛑')
             await msg.add_reaction(emoji=self.number_to_emote(len(game.users)))
 
-    @static.CommandBinding.assign_command(discord_bot, '게임시작', self.allowed_channels)
-    async def start_game(bot: static.DiscordBot, query: list, msg: discord.Message):
+    @static.CommandBinding.assign_command('게임시작', self.allowed_channels)
+    async def start_game(query: list, msg: discord.Message, **kwargs):
         game_channel = self.game_channels[msg.channel.id]
         if game_channel.running_game is not None:
             await msg.channel.send(
