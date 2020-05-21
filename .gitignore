@@ -149,3 +149,6 @@ $RECYCLE.BIN/
 /ignore
 band_api.json
 discord_bot_token
+
+.env
+.venv
