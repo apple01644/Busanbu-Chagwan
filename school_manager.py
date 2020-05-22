@@ -161,6 +161,7 @@ class SchoolManager:
     async def request_meal_data(self, query: list, msg: discord.Message, **kwargs):
         time = datetime.datetime.now().time()
         day = 0
+        meal_code = None
 
         if '아침' in query or ('조식' in query):
             meal_code = 1
@@ -168,16 +169,6 @@ class SchoolManager:
             meal_code = 2
         elif ('저녁' in query) or ('석식' in query):
             meal_code = 3
-        else:
-            if time < datetime.time(hour=7, minute=45):
-                meal_code = 1
-            elif time < datetime.time(hour=13, minute=20):
-                meal_code = 2
-            elif time < datetime.time(hour=19, minute=10):
-                meal_code = 3
-            else:
-                meal_code = 1
-                day = 1
 
         if '내일' in query:
             day += 1
@@ -200,8 +191,24 @@ class SchoolManager:
             if (weekday_name in query) or (f'{weekday_name}요일' in query):
                 day += weekday_index - date.weekday()
 
+        if day == 0:
+            if meal_code is None:
+                if time < datetime.time(hour=7, minute=45):
+                    meal_code = 1
+                elif time < datetime.time(hour=13, minute=20):
+                    meal_code = 2
+                elif time < datetime.time(hour=19, minute=10):
+                    meal_code = 3
+                else:
+                    meal_code = 1
+                    day = 1
+
         date += datetime.timedelta(days=day)
-        await msg.channel.send(embed=await self.build_meal_embed(date, meal_code))
+        if meal_code is None:
+            for meal_code in [1, 2, 3]:
+                await msg.channel.send(embed=await self.build_meal_embed(date, meal_code))
+        else:
+            await msg.channel.send(embed=await self.build_meal_embed(date, meal_code))
 
     async def build_class_embed(self, date: datetime.date, grade: int, class_number: int) -> discord.Embed:
         index = f'{date.month}/{date.day}/{date.year}'
