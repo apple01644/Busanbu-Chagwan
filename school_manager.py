@@ -56,7 +56,7 @@ class SchoolManager:
             index = f"{row['GRADE']}-{row['CLRM_NM']}"
             if index not in cached_data:
                 cached_data[index] = {}
-            cached_data[index][row['PERIO']] = row['ITRT_CNTNT']
+            cached_data[index][int(row['PERIO'])] = row['ITRT_CNTNT']
         cached_data = {key: cached_data[key] for key in sorted(cached_data.keys())}
         self.class_cached_data[f'{month}/{day}/{year}'] = cached_data
 
