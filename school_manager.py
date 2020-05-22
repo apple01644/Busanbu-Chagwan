@@ -310,9 +310,9 @@ class SchoolManager:
                 elif self.last_run_time < the_class['end'] <= now_time:
                     await self.alarm_channel.send(embed=discord.Embed(title=f'{the_class["index"]}교시 끝\n@everyone'))
                     if the_class["index"] == 4:
-                        await self.alarm_channel.channel.send(embed=await self.build_meal_embed(now_date, 2))
+                        await self.alarm_channel.send(embed=await self.build_meal_embed(now_date, 2))
                     if the_class["index"] == 9:
-                        await self.alarm_channel.channel.send(embed=await self.build_meal_embed(now_date, 3))
+                        await self.alarm_channel.send(embed=await self.build_meal_embed(now_date, 3))
             self.last_run_time = now_time
         except Exception as e:
             print(traceback.format_exc(), e)
