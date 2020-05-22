@@ -116,10 +116,8 @@ class DiscordBot:
         if msg.author.bot:
             return
 
-        if isinstance(msg.channel, discord.DMChannel):
-            await CommandBinding.run_listener(self, msg)
-        elif len(msg.content) == 0:
-            pass
+        if len(msg.content) == 0:
+            return
         else:
             if msg.content[0] != 'ㄱ':
                 return
@@ -130,6 +128,8 @@ class DiscordBot:
                 query = [arg.strip() for arg in msg.content[msg.content.find(' ') + 1:].split(',')]
             command = command[1:]
             await CommandBinding.run_command(command, self, query, msg)
+        if isinstance(msg.channel, discord.DMChannel):
+            await CommandBinding.run_listener(self, msg)
 
 
 __client__ = discord.Client()
