@@ -116,6 +116,13 @@ class SchoolManager:
             day += 7
         if '다다음주' in query:
             day += 14
+        if '저번주' in query:
+            day -= 7
+        if '저저번주' in query:
+            day -= 14
+        if '저저저번주' in query:
+            day -= 21
+            
         for k in range(1, 365):
             if (f'{k}일후' in query) or (f'{k}일 후' in query) or (f'{k}일뒤' in query) or (f'{k}일 뒤' in query):
                 day = k
